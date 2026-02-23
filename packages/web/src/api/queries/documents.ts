@@ -249,3 +249,14 @@ export function useImportFromDc() {
     },
   });
 }
+
+export function useDocumentReopen() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiClient.post<{ id: string; state: string }>(`/documents/${id}/reopen`, {}),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: documentKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: documentKeys.myUploads() });
+    },
+  });
+}
