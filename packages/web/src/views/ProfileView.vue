@@ -1,15 +1,23 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref } from "vue";
 import type { GovernmentLevel } from "@opo/shared";
 import { useAuthStore } from "../stores/auth";
-import { useProfileUsage, useProfileLocation, useUpdateProfileLocation, useProfileApiKeys, useSetOpenRouterKey, useDeleteOpenRouterKey, useUpdateApiKeySettings } from "../api/queries/profile";
+import {
+  useProfile,
+  useUpdateProfile,
+  useUpdateProfileLocation,
+  useProfileApiKeys,
+  useSetOpenRouterKey,
+  useDeleteOpenRouterKey,
+  useUpdateApiKeySettings,
+} from "../api/queries/profile";
 import LocationSelector from "../components/locations/LocationSelector.vue";
+import ToggleSwitch from "primevue/toggleswitch";
 
 const authStore = useAuthStore();
-const user = computed(() => authStore.user);
 
-const { data: usage, isLoading: usageLoading } = useProfileUsage();
-const { data: locationData, isLoading: locationLoading } = useProfileLocation();
+const { data: profile, isLoading: profileLoading } = useProfile();
+const { mutate: updateProfile } = useUpdateProfile();
 const { mutate: updateLocation, isPending: locationSaving } = useUpdateProfileLocation();
 const { data: apiKeyData, isLoading: apiKeyLoading } = useProfileApiKeys();
 const { mutate: setOpenRouterKey, isPending: keySettingPending } = useSetOpenRouterKey();
@@ -22,12 +30,12 @@ const locationStateUsps = ref<string | null>(null);
 const locationPlaceGeoid = ref<string | null>(null);
 const locationTribeId = ref<string | null>(null);
 
-// Sync from loaded location
+// Sync from loaded profile location
 const locationInitialized = ref(false);
 function initLocation() {
-  if (locationData.value && !locationInitialized.value) {
-    locationStateUsps.value = locationData.value.stateUsps ?? null;
-    locationPlaceGeoid.value = locationData.value.placeGeoid ?? null;
+  if (profile.value && !locationInitialized.value) {
+    locationStateUsps.value = profile.value.location.stateUsps ?? null;
+    locationPlaceGeoid.value = profile.value.location.placeGeoid ?? null;
     if (locationStateUsps.value && locationPlaceGeoid.value) {
       locationLevel.value = "place";
     } else if (locationStateUsps.value) {
@@ -73,15 +81,34 @@ function saveDailyLimit() {
     <!-- User Info Section -->
     <section class="bg-elevated rounded-lg p-6 space-y-3">
       <h2 class="text-lg font-medium text-primary">Account Information</h2>
-      <div v-if="user" class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+      <div v-if="!profileLoading && profile" class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
         <span class="text-muted">Name</span>
-        <span class="text-primary">{{ user.name ?? "—" }}</span>
+        <span class="text-primary">{{ profile.name ?? "—" }}</span>
         <span class="text-muted">Email</span>
-        <span class="text-primary">{{ user.email }}</span>
+        <span class="text-primary">{{ profile.email }}</span>
         <span class="text-muted">Role</span>
-        <span class="text-primary capitalize">{{ user.role }}</span>
+        <span class="text-primary capitalize">{{ profile.role }}</span>
         <span class="text-muted">Tier</span>
-        <span class="text-primary">{{ user.tier }}</span>
+        <span class="text-primary">{{ profile.tierName }}</span>
+      </div>
+      <p v-else class="text-muted text-sm">Loading...</p>
+    </section>
+
+    <!-- AI Analysis Section -->
+    <section class="bg-elevated rounded-lg p-6 space-y-4">
+      <h2 class="text-lg font-medium text-primary">AI Analysis</h2>
+      <p class="text-muted text-sm">When enabled, documents you upload will be analyzed by AI to suggest metadata.</p>
+      <div v-if="!profileLoading && profile">
+        <div class="flex items-center gap-3">
+          <ToggleSwitch
+            :model-value="profile.aiSuggestions.enabled"
+            @update:model-value="updateProfile({ aiSuggestionsEnabled: $event })"
+          />
+          <span class="text-sm text-primary">{{ profile.aiSuggestions.enabled ? "Enabled" : "Disabled" }}</span>
+        </div>
+        <p v-if="!profile.aiSuggestions.available" class="mt-2 text-sm text-surface-500">
+          AI analysis is currently unavailable (no API key configured or limit reached).
+        </p>
       </div>
       <p v-else class="text-muted text-sm">Loading...</p>
     </section>
@@ -90,7 +117,7 @@ function saveDailyLimit() {
     <section class="bg-elevated rounded-lg p-6 space-y-4">
       <h2 class="text-lg font-medium text-primary">Location Preference</h2>
       <p class="text-muted text-sm">Set your default location for browsing documents.</p>
-      <div v-if="!locationLoading" @vue:mounted="initLocation()">
+      <div v-if="!profileLoading && profile" @vue:mounted="initLocation()">
         <LocationSelector
           :government-level="locationLevel"
           :state-usps="locationStateUsps"
@@ -115,32 +142,31 @@ function saveDailyLimit() {
     <!-- Usage Section -->
     <section class="bg-elevated rounded-lg p-6 space-y-4">
       <h2 class="text-lg font-medium text-primary">Usage</h2>
-      <div v-if="!usageLoading && usage">
-        <div
-          v-for="item in (Array.isArray(usage) ? usage : [])"
-          :key="(item as Record<string, unknown>).limitType as string"
-          class="flex justify-between items-center text-sm py-2 border-b border-subtle last:border-0"
-        >
-          <span class="text-muted capitalize">{{ (item as Record<string, unknown>).limitType as string }}</span>
-          <span class="text-primary">
-            {{ (item as Record<string, unknown>).used as number }} /
-            {{ (item as Record<string, unknown>).limit as number }}
-          </span>
+      <div v-if="!profileLoading && profile">
+        <div class="space-y-2">
+          <div class="flex justify-between items-center text-sm py-2 border-b border-subtle">
+            <span class="text-muted">AI Suggestions (monthly)</span>
+            <span class="text-primary">
+              {{ profile.aiSuggestions.limits.used }}
+              <template v-if="profile.aiSuggestions.limits.monthly !== null">
+                / {{ profile.aiSuggestions.limits.monthly }}
+              </template>
+              <template v-else> (unlimited)</template>
+            </span>
+          </div>
         </div>
-        <p v-if="!(Array.isArray(usage) ? usage : []).length" class="text-muted text-sm">No usage data available.</p>
       </div>
-      <p v-else-if="usageLoading" class="text-muted text-sm">Loading...</p>
-      <p v-else class="text-muted text-sm">No usage data available.</p>
+      <p v-else class="text-muted text-sm">Loading...</p>
     </section>
 
     <!-- API Keys Section -->
     <section class="bg-elevated rounded-lg p-6 space-y-4">
       <h2 class="text-lg font-medium text-primary">API Keys</h2>
       <div v-if="!apiKeyLoading && apiKeyData">
-        <div v-if="(apiKeyData as Record<string, unknown>).hasKey" class="space-y-3">
+        <div v-if="apiKeyData.hasKey" class="space-y-3">
           <div class="text-sm">
             <span class="text-muted">Current key: </span>
-            <span class="text-primary font-mono">{{ (apiKeyData as Record<string, unknown>).maskedKey as string }}</span>
+            <span class="text-primary font-mono">{{ apiKeyData.maskedKey }}</span>
           </div>
           <div class="flex items-center gap-3">
             <label class="text-sm text-muted">Daily limit:</label>
