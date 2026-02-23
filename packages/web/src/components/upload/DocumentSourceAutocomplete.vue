@@ -1,18 +1,16 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import AutoComplete from "primevue/autocomplete";
 import type { AutoCompleteCompleteEvent } from "primevue/autocomplete";
 import type { State, Place, Tribe } from "@opo/shared";
 import { useStateList, useTribeList } from "../../api/queries/locations";
 import { apiClient } from "../../api/client";
 
-export interface LocationSelection {
-  governmentLevel: "state" | "place" | "tribal";
-  stateUsps?: string;
-  placeGeoid?: string;
-  tribeId?: string;
-  label: string;
-}
+export type LocationSelection =
+  | { governmentLevel: "federal"; stateUsps?: never; placeGeoid?: never; tribeId?: never; label: string }
+  | { governmentLevel: "state"; stateUsps: string; placeGeoid?: never; tribeId?: never; label: string }
+  | { governmentLevel: "place"; stateUsps: string; placeGeoid: string; tribeId?: never; label: string }
+  | { governmentLevel: "tribal"; stateUsps?: never; placeGeoid?: never; tribeId: string; label: string };
 
 interface SuggestionItem {
   id: string;
@@ -38,6 +36,13 @@ const suggestions = ref<SuggestionItem[]>([]);
 const isLoading = ref(false);
 const selected = ref<SuggestionItem | null>(null);
 
+// Fix 2: Reset selected when parent clears modelValue
+watch(() => props.modelValue, (val) => {
+  if (val === null || val === undefined) {
+    selected.value = null;
+  }
+});
+
 // Detect a 2-letter state abbreviation at the end of the query string
 // e.g. "dubuque, ia" or "dubuque ia" -> "IA"
 function extractStateCode(query: string): string | null {
@@ -46,6 +51,15 @@ function extractStateCode(query: string): string | null {
     return match[1].toUpperCase();
   }
   return null;
+}
+
+function buildFederalItem(): SuggestionItem {
+  return {
+    id: "federal",
+    label: "Federal Government",
+    sublabel: "U.S. Federal",
+    location: { governmentLevel: "federal", label: "Federal Government" },
+  };
 }
 
 function buildStateItems(query: string): SuggestionItem[] {
@@ -128,6 +142,13 @@ async function handleComplete(event: AutoCompleteCompleteEvent) {
 
   isLoading.value = true;
   try {
+    const results: SuggestionItem[] = [];
+
+    // Fix 1: Include federal option when query matches
+    if ("federal government".includes(query.toLowerCase())) {
+      results.push(buildFederalItem());
+    }
+
     const stateItems = buildStateItems(query);
 
     // Tribe search: use server-side search for efficiency if tribes not loaded, else filter
@@ -141,8 +162,8 @@ async function handleComplete(event: AutoCompleteCompleteEvent) {
       placeItems = await fetchPlaceSuggestions(query, detectedState);
     }
 
-    // Combine: places first (most specific), then states, then tribes
-    suggestions.value = [...placeItems, ...stateItems, ...tribeItems].slice(0, 40);
+    // Combine: federal first, then places (most specific), then states, then tribes
+    suggestions.value = [...results, ...placeItems, ...stateItems, ...tribeItems].slice(0, 40);
   } finally {
     isLoading.value = false;
   }
