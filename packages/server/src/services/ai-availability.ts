@@ -51,16 +51,15 @@ export async function getAiAvailability(
   const monthlyLimit: number | null = limitRow?.limit_value ?? null;
 
   // 4. Count system-key LLM calls for this user in the current month
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 
   const countResult = await db
     .selectFrom("llm_call_logs")
     .select(db.fn.countAll<number>().as("count"))
     .where("user_id", "=", userId)
     .where("used_system_key", "=", true)
-    .where("started_at", ">=", startOfMonth as unknown as Date)
+    .where("started_at", ">=", startOfMonth)
     .executeTakeFirst();
 
   const used = Number(countResult?.count ?? 0);
