@@ -622,7 +622,7 @@ describe("POST /api/documents/initiate — authenticated", () => {
   }, 30_000);
 
   it("derives title from filename (no title in body)", async () => {
-    const res = await app.inject({
+    const initiateRes = await app.inject({
       method: "POST",
       url: "/api/documents/initiate",
       headers: { cookie },
@@ -635,10 +635,29 @@ describe("POST /api/documents/initiate — authenticated", () => {
         useAi: true,
       },
     });
-    expect(res.statusCode).toBe(200);
-    const { data } = res.json<{ data: { documentId: string } }>();
+    expect(initiateRes.statusCode).toBe(200);
+    const { data } = initiateRes.json<{ data: { documentId: string; objectKey: string } }>();
     expect(data.documentId).toMatch(/^[A-Za-z0-9_-]{21}$/);
-  }, 30_000);
+
+    // Confirm the upload to transition from pending_upload → submitted
+    const confirmRes = await app.inject({
+      method: "POST",
+      url: `/api/documents/${data.documentId}/confirm-upload`,
+      headers: { cookie },
+      payload: { objectKey: data.objectKey },
+    });
+    expect(confirmRes.statusCode).toBe(200);
+
+    // Fetch the document and verify the derived title
+    const getRes = await app.inject({
+      method: "GET",
+      url: `/api/documents/${data.documentId}`,
+      headers: { cookie },
+    });
+    expect(getRes.statusCode).toBe(200);
+    const getBody = getRes.json<{ success: boolean; data: { title: string } }>();
+    expect(getBody.data.title).toBe("Police Report 2024");
+  }, 60_000);
 
   it("creates document row in pending_upload state", async () => {
     const res = await app.inject({

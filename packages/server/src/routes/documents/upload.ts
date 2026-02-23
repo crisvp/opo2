@@ -144,12 +144,12 @@ const plugin: FastifyPluginAsync = async (fastify) => {
       }
 
       // Verify ownership
-      if ((doc.uploader_id as string) !== user.id) {
+      if (doc.uploader_id === null || doc.uploader_id !== user.id) {
         return reply.status(403).send({ success: false, error: "Not authorized" });
       }
 
       // Verify state
-      if ((doc.state as string) !== "pending_upload") {
+      if (doc.state !== "pending_upload") {
         return reply.status(422).send({
           success: false,
           error: "Document is not in pending_upload state",
@@ -157,7 +157,7 @@ const plugin: FastifyPluginAsync = async (fastify) => {
       }
 
       // Verify S3 object exists
-      const s3Info = await headObject(doc.filepath as string);
+      const s3Info = await headObject(doc.filepath);
       if (!s3Info) {
         return reply.status(422).send({ success: false, error: "File not found in S3" });
       }
@@ -175,7 +175,7 @@ const plugin: FastifyPluginAsync = async (fastify) => {
         .where("id", "=", id)
         .execute();
 
-      await enqueueVirusScan(id, doc.filepath as string, doc.mimetype as string);
+      await enqueueVirusScan(id, doc.filepath, doc.mimetype);
 
       return {
         success: true,
@@ -207,12 +207,12 @@ const plugin: FastifyPluginAsync = async (fastify) => {
       }
 
       // Verify ownership
-      if ((doc.uploader_id as string) !== user.id) {
+      if (doc.uploader_id === null || doc.uploader_id !== user.id) {
         return reply.status(403).send({ success: false, error: "Not authorized" });
       }
 
       // Verify state is draft
-      if ((doc.state as string) !== "draft") {
+      if (doc.state !== "draft") {
         return reply.status(422).send({
           success: false,
           error: "Document is not in draft state",
@@ -239,7 +239,7 @@ const plugin: FastifyPluginAsync = async (fastify) => {
         .execute();
 
       // Enqueue virus scan
-      await enqueueVirusScan(id, doc.filepath as string, doc.mimetype as string);
+      await enqueueVirusScan(id, doc.filepath, doc.mimetype);
 
       return {
         success: true,
