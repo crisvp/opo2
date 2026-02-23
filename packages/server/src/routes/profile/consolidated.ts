@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 
-import { updateProfileSchema } from "@opo/shared";
+import { profileResponseSchema, updateProfileSchema } from "@opo/shared";
 import { getAiAvailability } from "../../services/ai-availability.js";
 
 const plugin: FastifyPluginAsync = async (fastify) => {
@@ -9,6 +9,9 @@ const plugin: FastifyPluginAsync = async (fastify) => {
   fastify.withTypeProvider<ZodTypeProvider>().get(
     "/",
     {
+      schema: {
+        response: { 200: profileResponseSchema },
+      },
       preHandler: [fastify.requireAuth],
     },
     async (request, _reply) => {
@@ -33,32 +36,29 @@ const plugin: FastifyPluginAsync = async (fastify) => {
         .selectFrom("user")
         .select(["ai_suggestions_enabled", "createdAt"])
         .where("id", "=", user.id)
-        .executeTakeFirst();
+        .executeTakeFirstOrThrow();
 
       // Get AI availability
       const aiAvailability = await getAiAvailability(fastify.db, user.id, user.tier);
 
       return {
-        success: true,
-        data: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          tier: user.tier,
-          tierName: (tier?.name as string | undefined) ?? "Unknown",
-          aiSuggestions: {
-            enabled: userRow?.ai_suggestions_enabled ?? true,
-            available: aiAvailability.available,
-            usingOwnKey: aiAvailability.usingOwnKey,
-            limits: aiAvailability.limits,
-          },
-          location: {
-            stateUsps: profile?.state_usps ?? null,
-            placeGeoid: profile?.place_geoid ?? null,
-          },
-          createdAt: userRow?.createdAt ?? new Date(),
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        tier: user.tier,
+        tierName: tier?.name ?? "Unknown",
+        aiSuggestions: {
+          enabled: userRow.ai_suggestions_enabled,
+          available: aiAvailability.available,
+          usingOwnKey: aiAvailability.usingOwnKey,
+          limits: aiAvailability.limits,
         },
+        location: {
+          stateUsps: profile?.state_usps ?? null,
+          placeGeoid: profile?.place_geoid ?? null,
+        },
+        createdAt: userRow.createdAt,
       };
     },
   );
@@ -74,16 +74,16 @@ const plugin: FastifyPluginAsync = async (fastify) => {
       const user = request.user!;
       const { name, aiSuggestionsEnabled, stateUsps, placeGeoid } = request.body;
 
-      // Build user table update
-      const userUpdates: Record<string, unknown> = {};
-      if (name !== undefined) userUpdates["name"] = name;
-      if (aiSuggestionsEnabled !== undefined)
-        userUpdates["ai_suggestions_enabled"] = aiSuggestionsEnabled;
-
-      if (Object.keys(userUpdates).length > 0) {
+      // Build user table update with type-safe conditional spreading
+      if (name !== undefined || aiSuggestionsEnabled !== undefined) {
         await fastify.db
           .updateTable("user")
-          .set(userUpdates)
+          .set({
+            ...(name !== undefined ? { name } : {}),
+            ...(aiSuggestionsEnabled !== undefined
+              ? { ai_suggestions_enabled: aiSuggestionsEnabled }
+              : {}),
+          })
           .where("id", "=", user.id)
           .execute();
       }
