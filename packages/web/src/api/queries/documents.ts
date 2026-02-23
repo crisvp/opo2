@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
 import { computed } from "vue";
 import type { Ref } from "vue";
-import type { Document, DocumentDetail, DocumentListItem, PaginatedResponse } from "@opo/shared";
+import type { Document, DocumentDetail, DocumentListItem, PaginatedResponse, ImportFromDcInput } from "@opo/shared";
 import { apiClient } from "../client";
 
 export const documentKeys = {
@@ -65,6 +65,7 @@ export function useInitiateUpload() {
       category?: string;
       tags?: string[];
       saveAsDraft?: boolean;
+      useAi?: boolean;
     }) =>
       apiClient.post<{
         documentId: string;
@@ -234,6 +235,17 @@ export function useSyncAssociations() {
     }) => apiClient.post<void>(`/documents/${id}/associations`, { associations }),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: documentKeys.detail(variables.id) });
+    },
+  });
+}
+
+export function useImportFromDc() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ImportFromDcInput) =>
+      apiClient.post<{ documentId: string }>("/documents/import-from-dc", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: documentKeys.all });
     },
   });
 }
