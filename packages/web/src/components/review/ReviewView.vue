@@ -7,6 +7,7 @@ import {
   useUpdateDocument,
   useUpdateDocumentLocation,
   useSyncTags,
+  useSaveDraft,
   useSubmitForModeration,
 } from "../../api/queries/documents";
 import AiSuggestionRow from "./AiSuggestionRow.vue";
@@ -26,6 +27,7 @@ const { data: aiData, isLoading: aiLoading } = useDocumentAiMetadata(docId);
 const updateDoc = useUpdateDocument();
 const updateLocation = useUpdateDocumentLocation();
 const syncTags = useSyncTags();
+const saveDraft = useSaveDraft();
 const submitForModeration = useSubmitForModeration();
 
 // ── AI metadata row type as returned by the ai-metadata endpoint (raw DB columns) ──
@@ -193,6 +195,19 @@ async function handleSubmit() {
     await submitForModeration.mutateAsync(props.documentId);
   } catch {
     submitError.value = "Failed to submit. Please try again.";
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+async function handleSaveDraft() {
+  if (!docData.value) return;
+  submitError.value = "";
+  isSaving.value = true;
+  try {
+    await saveDraft.mutateAsync(props.documentId);
+  } catch {
+    submitError.value = "Failed to save draft. Please try again.";
   } finally {
     isSaving.value = false;
   }
@@ -393,15 +408,26 @@ const doc = computed(() => docData.value);
           </template>
         </div>
 
-        <button
-          type="button"
-          class="px-5 py-2 bg-interactive text-inverted rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="!canSubmit || isSaving"
-          data-testid="submit-for-moderation-button"
-          @click="handleSubmit"
-        >
-          {{ isSaving ? "Submitting…" : "Submit for Moderation" }}
-        </button>
+        <div class="flex gap-3">
+          <button
+            type="button"
+            class="px-5 py-2 border border-default rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-hover"
+            :disabled="isSaving"
+            data-testid="save-draft-button"
+            @click="handleSaveDraft"
+          >
+            {{ isSaving ? "Saving…" : "Save as Draft" }}
+          </button>
+          <button
+            type="button"
+            class="px-5 py-2 bg-interactive text-inverted rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="!canSubmit || isSaving"
+            data-testid="submit-for-moderation-button"
+            @click="handleSubmit"
+          >
+            {{ isSaving ? "Submitting…" : "Submit for Moderation" }}
+          </button>
+        </div>
       </div>
     </template>
   </div>

@@ -250,6 +250,17 @@ export function useImportFromDc() {
   });
 }
 
+export function useSaveDraft() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiClient.post<{ success: boolean }>(`/documents/${id}/save-draft`, {}),
+    onSuccess: (_data, id) => {
+      void queryClient.invalidateQueries({ queryKey: documentKeys.detail(id) });
+      void queryClient.invalidateQueries({ queryKey: documentKeys.myUploads() });
+    },
+  });
+}
+
 export function useDocumentReopen() {
   const queryClient = useQueryClient();
   return useMutation({
