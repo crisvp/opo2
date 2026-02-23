@@ -82,8 +82,23 @@ const router = createRouter({
     // Locations
     {
       path: "/locations",
-      name: "locations",
-      component: () => import("../views/locations/LocationsIndexView.vue"),
+      component: () => import("../views/locations/LocationsLayoutView.vue"),
+      children: [
+        {
+          path: "",
+          redirect: "/locations/states",
+        },
+        {
+          path: "states",
+          name: "locations-states",
+          component: () => import("../views/locations/StatesTabView.vue"),
+        },
+        {
+          path: "tribes",
+          name: "locations-tribes",
+          component: () => import("../views/locations/TribesTabView.vue"),
+        },
+      ],
     },
     {
       path: "/locations/states/:usps",
