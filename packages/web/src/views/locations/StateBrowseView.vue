@@ -23,13 +23,9 @@ const { data: places, isLoading, isError } = usePlaceList(usps);
       <li v-for="place in places" :key="place.geoid">
         <RouterLink
           :to="`/locations/places/${place.geoid}`"
-          class="flex items-center justify-between py-3 hover:bg-sunken px-2 rounded transition-colors"
+          class="flex items-center py-3 hover:bg-sunken px-2 rounded transition-colors"
         >
-          <div>
-            <span class="font-medium text-primary">{{ place.name }}</span>
-            <span v-if="place.lsad" class="ml-1 text-muted text-sm">({{ place.lsad }})</span>
-          </div>
-          <span class="text-muted text-xs">{{ place.geoid }}</span>
+          <span class="font-medium text-primary">{{ place.name }}</span>
         </RouterLink>
       </li>
     </ul>
