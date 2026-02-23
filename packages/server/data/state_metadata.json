@@ -1,0 +1,787 @@
+[
+  {
+    "usps": "AL",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Alabama Law Enforcement Agency",
+        "url": "https://www.alea.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Alabama Open Records Act (Alabama Code § 36-12-40)",
+        "url": "https://alisondb.legislature.state.al.us/alison/CodeOfAlabama/1975/36-12-40.htm"
+      }
+    ]
+  },
+  {
+    "usps": "AK",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Alaska Department of Public Safety",
+        "url": "https://dps.alaska.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Alaska Public Records Act (Alaska Stat. § 40.25.100)",
+        "url": "http://www.akleg.gov/basis/statutes.asp#40.25.100"
+      }
+    ]
+  },
+  {
+    "usps": "AZ",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Arizona Department of Public Safety",
+        "url": "https://www.azdps.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Arizona Public Records Law (A.R.S. § 39-121)",
+        "url": "https://www.azleg.gov/ars/39/00121.htm"
+      }
+    ]
+  },
+  {
+    "usps": "AR",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Arkansas State Police",
+        "url": "https://www.asp.arkansas.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Arkansas Freedom of Information Act (Ark. Code § 25-19-101)",
+        "url": "https://advance.lexis.com/documentpage/?pdmfid=1000516&crid=a0b8e8f0-4e4a-4e0c-9e0a-8f0a4e4a4e0c&config=00JAA1MDBlYzczZi1lYjFlLTQxMTgtYWE3OS02YTgyOGM2NWJlMDYKAFBvZENhdGFsb2feed0oM9qoQOMCSJFX5qkd&pddocfullpath=%2Fshared%2Fdocument%2Fstatutes-legislation%2Furn%3AcontentItem%3A8P6B-T5X2-8T6X-730Y-00008-00"
+      }
+    ]
+  },
+  {
+    "usps": "CA",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "California Department of Justice",
+        "url": "https://oag.ca.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "California Public Records Act (Cal. Gov. Code § 7920.000)",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?sectionNum=7920.000&lawCode=GOV"
+      },
+      {
+        "key": "ALPR Statute",
+        "value": "California Civil Code § 1798.90.5",
+        "url": "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?sectionNum=1798.90.5&lawCode=CIV"
+      }
+    ]
+  },
+  {
+    "usps": "CO",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Colorado Bureau of Investigation",
+        "url": "https://cbi.colorado.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Colorado Open Records Act (C.R.S. § 24-72-201) & Colorado Criminal Justice Records Act (§ 24-72-301)",
+        "url": "https://leg.colorado.gov/sites/default/files/images/olls/crs2023-title-24.pdf"
+      }
+    ]
+  },
+  {
+    "usps": "CT",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Connecticut State Police",
+        "url": "https://portal.ct.gov/despp/division-of-state-police/state-police"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Connecticut Freedom of Information Act (Conn. Gen. Stat. § 1-200)",
+        "url": "https://www.cga.ct.gov/current/pub/chap_014.htm#sec_1-200"
+      }
+    ]
+  },
+  {
+    "usps": "DE",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Delaware State Police",
+        "url": "https://dsp.delaware.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Delaware Freedom of Information Act (29 Del. C. § 10001)",
+        "url": "https://delcode.delaware.gov/title29/c100/index.html"
+      }
+    ]
+  },
+  {
+    "usps": "FL",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Florida Department of Law Enforcement",
+        "url": "https://www.fdle.state.fl.us/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Florida Public Records Law (Fla. Stat. § 119.01)",
+        "url": "http://www.leg.state.fl.us/Statutes/index.cfm?App_mode=Display_Statute&URL=0100-0199/0119/0119.html"
+      }
+    ]
+  },
+  {
+    "usps": "GA",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Georgia Bureau of Investigation",
+        "url": "https://gbi.georgia.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Georgia Open Records Act (O.C.G.A. § 50-18-70)",
+        "url": "https://advance.lexis.com/documentpage/?pdmfid=1000516&crid=c8e8e8f0-4e4a-4e0c-9e0a-8f0a4e4a4e0c&config=00JAA1MDBlYzczZi1lYjFlLTQxMTgtYWE3OS02YTgyOGM2NWJlMDYKAFBvZENhdGFsb2feed0oM9qoQOMCSJFX5qkd&pddocfullpath=%2Fshared%2Fdocument%2Fstatutes-legislation%2Furn%3AcontentItem%3A5YJ0-RGY1-JSJC-X4G3-00008-00"
+      }
+    ]
+  },
+  {
+    "usps": "HI",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Hawaii Criminal Justice Data Center",
+        "url": "https://ag.hawaii.gov/hcjdc/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Hawaii Uniform Information Practices Act (HRS § 92F-1)",
+        "url": "https://www.capitol.hawaii.gov/hrscurrent/Vol02_Ch0046-0115/HRS0092F/HRS_0092F-.htm"
+      }
+    ]
+  },
+  {
+    "usps": "ID",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Idaho State Police",
+        "url": "https://isp.idaho.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Idaho Public Records Act (Idaho Code § 74-101)",
+        "url": "https://legislature.idaho.gov/statutesrules/idstat/Title74/T74CH1/"
+      }
+    ]
+  },
+  {
+    "usps": "IL",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Illinois State Police",
+        "url": "https://isp.illinois.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Illinois Freedom of Information Act (5 ILCS 140/1)",
+        "url": "https://www.ilga.gov/legislation/ilcs/ilcs3.asp?ActID=85&ChapterID=2"
+      }
+    ]
+  },
+  {
+    "usps": "IN",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Indiana State Police",
+        "url": "https://www.in.gov/isp/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Indiana Access to Public Records Act (Ind. Code § 5-14-3)",
+        "url": "http://iga.in.gov/legislative/laws/2023/ic/titles/005#5-14-3"
+      }
+    ]
+  },
+  {
+    "usps": "IA",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "DPS DOI/FC",
+        "url": "https://dps.iowa.gov/divisions-iowa-department-public-safety/iowa-division-intelligence-fusion-center/about-doi"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Iowa Open Records Act (Iowa Code Ch. 22)",
+        "url": "https://www.legis.iowa.gov/docs/code/22.pdf"
+      },
+      {
+        "key": "ALPR Statute",
+        "value": "Iowa Code Ch. 321P",
+        "url": "https://www.legis.iowa.gov/docs/ico/chapter/321P.pdf"
+      }
+    ]
+  },
+  {
+    "usps": "KS",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Kansas Bureau of Investigation",
+        "url": "https://www.kansas.gov/kbi/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Kansas Open Records Act (K.S.A. § 45-215)",
+        "url": "http://www.kslegislature.org/li/b2023_24/statute/045_000_0000_chapter/045_002_0000_article/045_002_0015_section/045_002_0015_k/"
+      }
+    ]
+  },
+  {
+    "usps": "KY",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Kentucky State Police",
+        "url": "https://kentuckystatepolice.org/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Kentucky Open Records Act (KRS § 61.870)",
+        "url": "https://apps.legislature.ky.gov/law/statutes/statute.aspx?id=31878"
+      }
+    ]
+  },
+  {
+    "usps": "LA",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Louisiana State Police",
+        "url": "https://www.lsp.org/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Louisiana Public Records Act (La. R.S. § 44:1)",
+        "url": "https://legis.la.gov/Legis/Law.aspx?d=85282"
+      }
+    ]
+  },
+  {
+    "usps": "ME",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Maine State Police",
+        "url": "https://www.maine.gov/dps/msp/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Maine Freedom of Access Act (1 M.R.S. § 401)",
+        "url": "https://legislature.maine.gov/statutes/1/title1sec401.html"
+      },
+      {
+        "key": "ALPR Statute",
+        "value": "Maine Title 29-A § 2117-A",
+        "url": "https://legislature.maine.gov/statutes/29-A/title29-Asec2117-A.html"
+      }
+    ]
+  },
+  {
+    "usps": "MD",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Maryland State Police",
+        "url": "https://mdsp.maryland.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Maryland Public Information Act (Md. Code, General Provisions § 4-101)",
+        "url": "https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=ggp&section=4-101"
+      }
+    ]
+  },
+  {
+    "usps": "MA",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Massachusetts State Police",
+        "url": "https://www.mass.gov/orgs/massachusetts-state-police"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Massachusetts Public Records Law (M.G.L. c. 66 § 10)",
+        "url": "https://malegislature.gov/Laws/GeneralLaws/PartI/TitleX/Chapter66/Section10"
+      }
+    ]
+  },
+  {
+    "usps": "MI",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Michigan State Police",
+        "url": "https://www.michigan.gov/msp"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Michigan Freedom of Information Act (MCL § 15.231)",
+        "url": "http://www.legislature.mi.gov/(S(jrozkw5awhqzgvn0ajbtwp0d))/mileg.aspx?page=getObject&objectName=mcl-15-231"
+      }
+    ]
+  },
+  {
+    "usps": "MN",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Minnesota Bureau of Criminal Apprehension",
+        "url": "https://dps.mn.gov/divisions/bca/Pages/default.aspx"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Minnesota Government Data Practices Act (Minn. Stat. § 13.01)",
+        "url": "https://www.revisor.mn.gov/statutes/cite/13"
+      },
+      {
+        "key": "ALPR Statute",
+        "value": "Minnesota Stat. § 13.824",
+        "url": "https://www.revisor.mn.gov/statutes/cite/13.824"
+      }
+    ]
+  },
+  {
+    "usps": "MS",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Mississippi Department of Public Safety",
+        "url": "https://www.dps.ms.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Mississippi Public Records Act (Miss. Code § 25-61-1)",
+        "url": "https://law.justia.com/codes/mississippi/2022/title-25/chapter-61/"
+      }
+    ]
+  },
+  {
+    "usps": "MO",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Missouri State Highway Patrol",
+        "url": "https://www.mshp.dps.missouri.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Missouri Sunshine Law (Mo. Rev. Stat. § 610.010)",
+        "url": "https://revisor.mo.gov/main/OneChapter.aspx?chapter=610"
+      }
+    ]
+  },
+  {
+    "usps": "MT",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Montana Department of Justice",
+        "url": "https://dojmt.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Montana Right to Know Act (Mont. Code § 2-6-101)",
+        "url": "https://leg.mt.gov/bills/mca/title_0020/chapter_0060/part_0010/section_0010/0020-0060-0010-0010.html"
+      }
+    ]
+  },
+  {
+    "usps": "NE",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Nebraska State Patrol",
+        "url": "https://statepatrol.nebraska.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Nebraska Public Records Act (Neb. Rev. Stat. § 84-712)",
+        "url": "https://nebraskalegislature.gov/laws/statutes.php?statute=84-712"
+      }
+    ]
+  },
+  {
+    "usps": "NV",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Nevada Department of Public Safety",
+        "url": "https://dps.nv.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Nevada Public Records Act (NRS § 239.010)",
+        "url": "https://www.leg.state.nv.us/nrs/nrs-239.html"
+      }
+    ]
+  },
+  {
+    "usps": "NH",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "New Hampshire State Police",
+        "url": "https://www.nh.gov/safety/divisions/nhsp/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "New Hampshire Right-to-Know Law (RSA § 91-A:1)",
+        "url": "http://www.gencourt.state.nh.us/rsa/html/VI/91-A/91-A-mrg.htm"
+      },
+      {
+        "key": "ALPR Statute",
+        "value": "New Hampshire RSA § 236:130",
+        "url": "http://www.gencourt.state.nh.us/rsa/html/XXI/236/236-130.htm"
+      }
+    ]
+  },
+  {
+    "usps": "NJ",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "New Jersey State Police",
+        "url": "https://www.nj.gov/njsp/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "New Jersey Open Public Records Act (N.J.S.A. § 47:1A-1)",
+        "url": "https://lis.njleg.state.nj.us/nxt/gateway.dll?f=templates&fn=default.htm&vid=Publish:10.1048/Enu"
+      }
+    ]
+  },
+  {
+    "usps": "NM",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "New Mexico Department of Public Safety",
+        "url": "https://www.dps.nm.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "New Mexico Inspection of Public Records Act (NMSA § 14-2-1)",
+        "url": "https://nmonesource.com/nmos/nmsa/en/item/4388/index.do"
+      }
+    ]
+  },
+  {
+    "usps": "NY",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "New York State Police",
+        "url": "https://troopers.ny.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "New York Freedom of Information Law (Pub. Off. Law § 84)",
+        "url": "https://www.nysenate.gov/legislation/laws/PBO/84"
+      }
+    ]
+  },
+  {
+    "usps": "NC",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "North Carolina State Bureau of Investigation",
+        "url": "https://www.ncsbi.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "North Carolina Public Records Act (N.C.G.S. § 132-1)",
+        "url": "https://www.ncleg.gov/EnactedLegislation/Statutes/HTML/ByChapter/Chapter_132.html"
+      }
+    ]
+  },
+  {
+    "usps": "ND",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "North Dakota Bureau of Criminal Investigation",
+        "url": "https://www.ag.nd.gov/public-safety-bureau-criminal-investigation"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "North Dakota Open Records Law (N.D.C.C. § 44-04-18)",
+        "url": "https://www.legis.nd.gov/cencode/t44c04.pdf"
+      }
+    ]
+  },
+  {
+    "usps": "OH",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Ohio Bureau of Criminal Investigation",
+        "url": "https://www.ohioattorneygeneral.gov/Law-Enforcement/Ohio-Bureau-of-Criminal-Investigation"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Ohio Public Records Act (Ohio Rev. Code § 149.43)",
+        "url": "https://codes.ohio.gov/ohio-revised-code/section-149.43"
+      }
+    ]
+  },
+  {
+    "usps": "OK",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Oklahoma State Bureau of Investigation",
+        "url": "https://osbi.ok.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Oklahoma Open Records Act (51 Okla. Stat. § 24A.1)",
+        "url": "http://www.oklegislature.gov/cf_pdf/2021-22%20SUPPORT%20DOCUMENTS/OS/51OS24A.1.PDF"
+      }
+    ]
+  },
+  {
+    "usps": "OR",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Oregon State Police",
+        "url": "https://www.oregon.gov/osp/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Oregon Public Records Law (ORS § 192.311)",
+        "url": "https://www.oregonlegislature.gov/bills_laws/ors/ors192.html"
+      }
+    ]
+  },
+  {
+    "usps": "PA",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Pennsylvania State Police",
+        "url": "https://www.psp.pa.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Pennsylvania Right-to-Know Law (65 P.S. § 67.101)",
+        "url": "https://www.openrecords.pa.gov/RTKL/Index.cfm"
+      }
+    ]
+  },
+  {
+    "usps": "RI",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Rhode Island State Police",
+        "url": "https://risp.ri.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Rhode Island Access to Public Records Act (R.I. Gen. Laws § 38-2-1)",
+        "url": "http://webserver.rilin.state.ri.us/Statutes/TITLE38/38-2/INDEX.HTM"
+      }
+    ]
+  },
+  {
+    "usps": "SC",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "South Carolina Law Enforcement Division",
+        "url": "https://www.sled.sc.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "South Carolina Freedom of Information Act (S.C. Code § 30-4-10)",
+        "url": "https://www.scstatehouse.gov/code/t30c004.php"
+      }
+    ]
+  },
+  {
+    "usps": "SD",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "South Dakota Division of Criminal Investigation",
+        "url": "https://dci.sd.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "South Dakota Sunshine Laws (SDCL § 1-27-1)",
+        "url": "https://sdlegislature.gov/Statutes/Codified_Laws/DisplayStatute.aspx?Type=Statute&Statute=1-27"
+      }
+    ]
+  },
+  {
+    "usps": "TN",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Tennessee Bureau of Investigation",
+        "url": "https://www.tn.gov/tbi.html"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Tennessee Public Records Act (Tenn. Code § 10-7-503)",
+        "url": "https://www.tn.gov/content/dam/tn/comptroller/documents/openrecords/opendocs/PublicRecordsAct.pdf"
+      }
+    ]
+  },
+  {
+    "usps": "TX",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Texas Department of Public Safety",
+        "url": "https://www.dps.texas.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Texas Public Information Act (Tex. Gov. Code § 552.001)",
+        "url": "https://statutes.capitol.texas.gov/Docs/GV/htm/GV.552.htm"
+      }
+    ]
+  },
+  {
+    "usps": "UT",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Utah Bureau of Criminal Identification",
+        "url": "https://bci.utah.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Utah Government Records Access and Management Act (Utah Code § 63G-2-101)",
+        "url": "https://le.utah.gov/xcode/Title63G/Chapter2/63G-2.html"
+      },
+      {
+        "key": "ALPR Statute",
+        "value": "Utah Code § 41-6a-2001",
+        "url": "https://le.utah.gov/xcode/Title41/Chapter6a/41-6a-S2001.html"
+      }
+    ]
+  },
+  {
+    "usps": "VT",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Vermont State Police",
+        "url": "https://vsp.vermont.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Vermont Public Records Act (1 V.S.A. § 315)",
+        "url": "https://legislature.vermont.gov/statutes/section/01/005/00315"
+      },
+      {
+        "key": "ALPR Statute",
+        "value": "Vermont Stat. Ann. tit. 23, § 1607",
+        "url": "https://legislature.vermont.gov/statutes/section/23/025/01607"
+      }
+    ]
+  },
+  {
+    "usps": "VA",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Virginia State Police",
+        "url": "https://www.vsp.virginia.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Virginia Freedom of Information Act (Va. Code § 2.2-3700)",
+        "url": "https://law.lis.virginia.gov/vacode/title2.2/chapter37/"
+      }
+    ]
+  },
+  {
+    "usps": "WA",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Washington State Patrol",
+        "url": "https://www.wsp.wa.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Washington Public Records Act (RCW § 42.56.010)",
+        "url": "https://app.leg.wa.gov/RCW/default.aspx?cite=42.56"
+      }
+    ]
+  },
+  {
+    "usps": "WV",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "West Virginia State Police",
+        "url": "https://www.wvsp.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "West Virginia Freedom of Information Act (W. Va. Code § 29B-1-1)",
+        "url": "http://www.wvlegislature.gov/wvcode/ChapterEntire.cfm?chap=29b&art=1&section=1"
+      }
+    ]
+  },
+  {
+    "usps": "WI",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Wisconsin Department of Justice",
+        "url": "https://www.doj.state.wi.us/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Wisconsin Open Records Law (Wis. Stat. § 19.31)",
+        "url": "https://docs.legis.wisconsin.gov/statutes/statutes/19/II"
+      }
+    ]
+  },
+  {
+    "usps": "WY",
+    "metadata": [
+      {
+        "key": "CJIS CSA",
+        "value": "Wyoming Division of Criminal Investigation",
+        "url": "https://dci.wyo.gov/"
+      },
+      {
+        "key": "Open Records Law",
+        "value": "Wyoming Public Records Act (Wyo. Stat. § 16-4-201)",
+        "url": "https://www.wyoleg.gov/NXT/gateway.dll?f=templates&fn=default.htm&vid=Publish:10.1048/Enu"
+      }
+    ]
+  }
+]
