@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { nanoid } from "nanoid";
-import { EDITABLE_STATES } from "@opo/shared";
+import { REVIEW_STATES } from "@opo/shared";
 
 const idParamsSchema = z.object({ id: z.string() });
 
@@ -51,7 +51,7 @@ const plugin: FastifyPluginAsync = async (fastify) => {
       }
 
       const currentState = doc.state;
-      if (!EDITABLE_STATES.includes(currentState as (typeof EDITABLE_STATES)[number])) {
+      if (!REVIEW_STATES.includes(currentState as (typeof REVIEW_STATES)[number])) {
         return reply.status(422).send({
           success: false,
           error: `Document in state '${currentState}' cannot be edited`,

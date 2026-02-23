@@ -13,15 +13,15 @@ export const DOCUMENT_STATE = {
 export type DocumentState = (typeof DOCUMENT_STATE)[keyof typeof DOCUMENT_STATE];
 
 export const VALID_STATE_TRANSITIONS: Record<DocumentState, DocumentState[]> = {
-  pending_upload: ["draft", "submitted"],
-  draft: ["submitted"],
+  pending_upload: ["submitted"],
+  draft: ["moderator_review"],
   submitted: ["processing"],
   processing: ["user_review", "moderator_review", "processing_failed"],
   processing_failed: ["submitted"],
-  user_review: ["moderator_review"],
+  user_review: ["draft", "moderator_review"],
   moderator_review: ["approved", "rejected"],
   approved: [],
-  rejected: ["submitted"],
+  rejected: ["submitted", "user_review"],
 };
 
 export function isValidStateTransition(from: DocumentState, to: DocumentState): boolean {
@@ -29,11 +29,12 @@ export function isValidStateTransition(from: DocumentState, to: DocumentState): 
 }
 
 export const PROCESSING_STATES: DocumentState[] = ["submitted", "processing"];
-export const EDITABLE_STATES: DocumentState[] = ["draft", "processing_failed", "rejected"];
+export const REVIEW_STATES: DocumentState[] = ["user_review", "draft"];
+// EDITABLE_STATES removed — editing now happens inside the review view
 export const DELETABLE_STATES: DocumentState[] = [
   "draft",
   "processing_failed",
   "rejected",
   "pending_upload",
 ];
-export const TERMINAL_STATES: DocumentState[] = ["approved", "rejected"];
+export const TERMINAL_STATES: DocumentState[] = ["approved"];

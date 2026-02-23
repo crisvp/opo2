@@ -2,7 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { GovernmentLevel } from "@opo/shared";
-import { EDITABLE_STATES } from "@opo/shared";
+import { REVIEW_STATES } from "@opo/shared";
 import {
   useDocumentDetail,
   useUpdateDocument,
@@ -58,7 +58,7 @@ const doc = computed(() => docData.value);
 
 const isEditable = computed(() => {
   if (!doc.value) return false;
-  return EDITABLE_STATES.includes(doc.value.state as (typeof EDITABLE_STATES)[number]);
+  return REVIEW_STATES.includes(doc.value.state as (typeof REVIEW_STATES)[number]);
 });
 
 async function handleSave() {

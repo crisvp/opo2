@@ -4,7 +4,6 @@ import {
   DOCUMENT_STATE,
   VALID_STATE_TRANSITIONS,
   isValidStateTransition,
-  EDITABLE_STATES,
   DELETABLE_STATES,
 } from "../src/constants/status.js";
 
@@ -63,13 +62,12 @@ describe("VALID_STATE_TRANSITIONS", () => {
     }
   });
 
-  it("pending_upload can transition to draft and submitted", () => {
-    expect(VALID_STATE_TRANSITIONS.pending_upload).toContain("draft");
-    expect(VALID_STATE_TRANSITIONS.pending_upload).toContain("submitted");
+  it("pending_upload can only transition to submitted", () => {
+    expect(VALID_STATE_TRANSITIONS.pending_upload).toEqual(["submitted"]);
   });
 
-  it("draft can only transition to submitted", () => {
-    expect(VALID_STATE_TRANSITIONS.draft).toEqual(["submitted"]);
+  it("draft can only transition to moderator_review", () => {
+    expect(VALID_STATE_TRANSITIONS.draft).toEqual(["moderator_review"]);
   });
 
   it("submitted can only transition to processing", () => {
@@ -82,28 +80,38 @@ describe("VALID_STATE_TRANSITIONS", () => {
     expect(VALID_STATE_TRANSITIONS.processing).toContain("processing_failed");
   });
 
+  it("user_review can transition to draft or moderator_review", () => {
+    expect(VALID_STATE_TRANSITIONS.user_review).toContain("draft");
+    expect(VALID_STATE_TRANSITIONS.user_review).toContain("moderator_review");
+  });
+
   it("approved has no transitions (terminal state)", () => {
     expect(VALID_STATE_TRANSITIONS.approved).toEqual([]);
   });
 
-  it("rejected can transition to submitted (resubmit)", () => {
+  it("rejected can transition to submitted (reimport) or user_review (edit)", () => {
     expect(VALID_STATE_TRANSITIONS.rejected).toContain("submitted");
+    expect(VALID_STATE_TRANSITIONS.rejected).toContain("user_review");
   });
 });
 
 describe("isValidStateTransition", () => {
   it("returns true for valid transitions", () => {
-    expect(isValidStateTransition("pending_upload", "draft")).toBe(true);
     expect(isValidStateTransition("pending_upload", "submitted")).toBe(true);
-    expect(isValidStateTransition("draft", "submitted")).toBe(true);
+    expect(isValidStateTransition("draft", "moderator_review")).toBe(true);
     expect(isValidStateTransition("submitted", "processing")).toBe(true);
+    expect(isValidStateTransition("user_review", "draft")).toBe(true);
+    expect(isValidStateTransition("user_review", "moderator_review")).toBe(true);
     expect(isValidStateTransition("moderator_review", "approved")).toBe(true);
     expect(isValidStateTransition("moderator_review", "rejected")).toBe(true);
     expect(isValidStateTransition("rejected", "submitted")).toBe(true);
+    expect(isValidStateTransition("rejected", "user_review")).toBe(true);
     expect(isValidStateTransition("processing_failed", "submitted")).toBe(true);
   });
 
   it("returns false for invalid transitions", () => {
+    expect(isValidStateTransition("pending_upload", "draft")).toBe(false);
+    expect(isValidStateTransition("draft", "submitted")).toBe(false);
     expect(isValidStateTransition("draft", "approved")).toBe(false);
     expect(isValidStateTransition("approved", "draft")).toBe(false);
     expect(isValidStateTransition("approved", "submitted")).toBe(false);
@@ -116,28 +124,6 @@ describe("isValidStateTransition", () => {
     for (const state of Object.values(DOCUMENT_STATE)) {
       expect(isValidStateTransition("approved", state)).toBe(false);
     }
-  });
-});
-
-describe("EDITABLE_STATES", () => {
-  it("contains draft", () => {
-    expect(EDITABLE_STATES).toContain("draft");
-  });
-
-  it("contains processing_failed", () => {
-    expect(EDITABLE_STATES).toContain("processing_failed");
-  });
-
-  it("contains rejected", () => {
-    expect(EDITABLE_STATES).toContain("rejected");
-  });
-
-  it("does not contain approved", () => {
-    expect(EDITABLE_STATES).not.toContain("approved");
-  });
-
-  it("does not contain submitted", () => {
-    expect(EDITABLE_STATES).not.toContain("submitted");
   });
 });
 

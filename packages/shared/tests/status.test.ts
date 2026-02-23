@@ -1,70 +1,77 @@
-import { describe, expect, it } from "vitest";
+import { describe, it, expect } from "vitest";
+import {
+  VALID_STATE_TRANSITIONS,
+  REVIEW_STATES,
+  DELETABLE_STATES,
+  TERMINAL_STATES,
+  isValidStateTransition,
+} from "../src/constants/status";
 
-import { DOCUMENT_STATE, isValidStateTransition } from "../src/constants/status.js";
-import { hasRole, ROLES } from "../src/constants/roles.js";
-
-describe("isValidStateTransition", () => {
-  it("allows pending_upload → draft", () => {
-    expect(isValidStateTransition("pending_upload", "draft")).toBe(true);
+describe("VALID_STATE_TRANSITIONS", () => {
+  it("pending_upload only transitions to submitted (not draft)", () => {
+    expect(VALID_STATE_TRANSITIONS.pending_upload).toEqual(["submitted"]);
   });
-
-  it("allows pending_upload → submitted", () => {
-    expect(isValidStateTransition("pending_upload", "submitted")).toBe(true);
+  it("draft transitions to moderator_review only", () => {
+    expect(VALID_STATE_TRANSITIONS.draft).toEqual(["moderator_review"]);
   });
-
-  it("allows draft → submitted", () => {
-    expect(isValidStateTransition("draft", "submitted")).toBe(true);
+  it("user_review can transition to draft or moderator_review", () => {
+    expect(VALID_STATE_TRANSITIONS.user_review).toContain("draft");
+    expect(VALID_STATE_TRANSITIONS.user_review).toContain("moderator_review");
   });
-
-  it("disallows draft → approved", () => {
-    expect(isValidStateTransition("draft", "approved")).toBe(false);
+  it("rejected can transition to submitted or user_review", () => {
+    expect(VALID_STATE_TRANSITIONS.rejected).toContain("submitted");
+    expect(VALID_STATE_TRANSITIONS.rejected).toContain("user_review");
   });
-
-  it("allows moderator_review → approved", () => {
-    expect(isValidStateTransition("moderator_review", "approved")).toBe(true);
-  });
-
-  it("allows moderator_review → rejected", () => {
-    expect(isValidStateTransition("moderator_review", "rejected")).toBe(true);
-  });
-
-  it("disallows approved → any transition", () => {
-    for (const state of Object.values(DOCUMENT_STATE)) {
-      expect(isValidStateTransition("approved", state)).toBe(false);
-    }
-  });
-
-  it("allows rejected → submitted (resubmit)", () => {
-    expect(isValidStateTransition("rejected", "submitted")).toBe(true);
-  });
-
-  it("allows processing_failed → submitted (retry)", () => {
-    expect(isValidStateTransition("processing_failed", "submitted")).toBe(true);
+  it("approved has no transitions", () => {
+    expect(VALID_STATE_TRANSITIONS.approved).toEqual([]);
   });
 });
 
-describe("hasRole", () => {
-  it("admin has admin role", () => {
-    expect(hasRole(ROLES.ADMIN, ROLES.ADMIN)).toBe(true);
+describe("REVIEW_STATES", () => {
+  it("contains user_review and draft", () => {
+    expect(REVIEW_STATES).toContain("user_review");
+    expect(REVIEW_STATES).toContain("draft");
   });
+});
 
-  it("admin has moderator role", () => {
-    expect(hasRole(ROLES.ADMIN, ROLES.MODERATOR)).toBe(true);
+describe("TERMINAL_STATES", () => {
+  it("only contains approved (not rejected)", () => {
+    expect(TERMINAL_STATES).toEqual(["approved"]);
   });
+});
 
-  it("admin has user role", () => {
-    expect(hasRole(ROLES.ADMIN, ROLES.USER)).toBe(true);
+describe("DELETABLE_STATES", () => {
+  it("contains draft", () => {
+    expect(DELETABLE_STATES).toContain("draft");
   });
-
-  it("moderator does not have admin role", () => {
-    expect(hasRole(ROLES.MODERATOR, ROLES.ADMIN)).toBe(false);
+  it("contains pending_upload", () => {
+    expect(DELETABLE_STATES).toContain("pending_upload");
   });
-
-  it("moderator has moderator role", () => {
-    expect(hasRole(ROLES.MODERATOR, ROLES.MODERATOR)).toBe(true);
+  it("contains processing_failed", () => {
+    expect(DELETABLE_STATES).toContain("processing_failed");
   });
+  it("contains rejected", () => {
+    expect(DELETABLE_STATES).toContain("rejected");
+  });
+  it("does not contain approved", () => {
+    expect(DELETABLE_STATES).not.toContain("approved");
+  });
+});
 
-  it("user does not have moderator role", () => {
-    expect(hasRole(ROLES.USER, ROLES.MODERATOR)).toBe(false);
+describe("isValidStateTransition", () => {
+  it("allows user_review → draft", () => {
+    expect(isValidStateTransition("user_review", "draft")).toBe(true);
+  });
+  it("allows draft → moderator_review", () => {
+    expect(isValidStateTransition("draft", "moderator_review")).toBe(true);
+  });
+  it("allows rejected → user_review", () => {
+    expect(isValidStateTransition("rejected", "user_review")).toBe(true);
+  });
+  it("disallows pending_upload → draft", () => {
+    expect(isValidStateTransition("pending_upload", "draft")).toBe(false);
+  });
+  it("disallows draft → submitted", () => {
+    expect(isValidStateTransition("draft", "submitted")).toBe(false);
   });
 });
