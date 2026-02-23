@@ -65,12 +65,14 @@ export async function extractor(rawPayload: unknown, helpers: JobHelpers): Promi
   const startedAt = new Date();
 
   try {
-    // Check if AI extraction is enabled for this document
+    // Check if AI extraction is enabled for this document; also fetch uploader_id for LLM call logging
     const doc = await db
       .selectFrom("documents")
-      .select(["use_ai_extraction"])
+      .select(["use_ai_extraction", "uploader_id"])
       .where("id", "=", documentId)
       .executeTakeFirst();
+
+    const uploaderId = doc?.uploader_id ?? null;
 
     if (!doc?.use_ai_extraction) {
       helpers.logger.info(`AI extraction disabled for document ${documentId}, skipping`);
@@ -112,12 +114,14 @@ export async function extractor(rawPayload: unknown, helpers: JobHelpers): Promi
       },
     ];
 
+    // No apiKey passed — uses the system key (process.env.OPENROUTER_API_KEY)
     const result = await chatCompletion({
       model: EXTRACTOR_MODEL,
       messages,
       maxTokens: 2048,
       temperature: 0.1,
     });
+    const usedSystemKey = true;
 
     const completedAt = new Date();
     const processingTimeMs = completedAt.getTime() - startedAt.getTime();
@@ -128,6 +132,11 @@ export async function extractor(rawPayload: unknown, helpers: JobHelpers): Promi
     } catch (parseErr) {
       throw new Error(`Failed to parse extractor LLM response: ${parseErr}. Raw: ${result.content}`);
     }
+
+    const totalTokens =
+      result.inputTokens !== null && result.outputTokens !== null
+        ? result.inputTokens + result.outputTokens
+        : null;
 
     // Log LLM call
     const llmLogId = nanoid();
@@ -145,6 +154,9 @@ export async function extractor(rawPayload: unknown, helpers: JobHelpers): Promi
         processing_time_ms: processingTimeMs,
         input_tokens: result.inputTokens,
         output_tokens: result.outputTokens,
+        total_tokens: totalTokens,
+        user_id: uploaderId,
+        used_system_key: usedSystemKey,
         cost_cents: null,
         error_code: null,
         error_message: null,
@@ -243,6 +255,9 @@ export async function extractor(rawPayload: unknown, helpers: JobHelpers): Promi
           processing_time_ms: failedAt.getTime() - startedAt.getTime(),
           input_tokens: 0,
           output_tokens: 0,
+          total_tokens: 0,
+          user_id: null,
+          used_system_key: true,
           cost_cents: null,
           error_code: null,
           error_message: String(err),
