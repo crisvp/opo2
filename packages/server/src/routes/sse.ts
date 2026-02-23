@@ -1,3 +1,4 @@
+import pg from "pg";
 import type { FastifyPluginAsync } from "fastify";
 import { nanoid } from "nanoid";
 
@@ -5,9 +6,49 @@ import {
   addSseClient,
   removeSseClient,
   getSseHealthInfo,
+  broadcastToUser,
 } from "../services/sse.js";
+import { env } from "../config/env.js";
 
 const plugin: FastifyPluginAsync = async (fastify) => {
+  // Set up dedicated PostgreSQL client for LISTEN/NOTIFY
+  const pgClient = new pg.Client({ connectionString: env.DATABASE_URL });
+  await pgClient.connect();
+
+  pgClient.on("notification", (msg) => {
+    if (msg.channel === "document_status") {
+      try {
+        const payload = JSON.parse(msg.payload ?? "{}") as { documentId: string; state: string };
+        if (payload.documentId) {
+          broadcastToUser(payload.documentId, "document:status", { documentId: payload.documentId, state: payload.state });
+        }
+      } catch {
+        // ignore parse errors
+      }
+    } else if (msg.channel === "op_profile_changed") {
+      try {
+        const payload = JSON.parse(msg.payload ?? "{}") as { userId: string };
+        if (payload.userId) {
+          broadcastToUser(payload.userId, "profile:updated", { userId: payload.userId });
+        }
+      } catch {
+        // ignore parse errors
+      }
+    }
+  });
+
+  await pgClient.query("LISTEN document_status");
+  await pgClient.query("LISTEN op_profile_changed");
+
+  fastify.addHook("onClose", async () => {
+    try {
+      await pgClient.query("UNLISTEN *");
+      await pgClient.end();
+    } catch {
+      // ignore errors during shutdown
+    }
+  });
+
   // GET /documents — Auth required, opens SSE stream
   fastify.get("/documents", { preHandler: [fastify.requireAuth] }, async (request, reply) => {
     const connectionId = nanoid();
