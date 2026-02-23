@@ -121,10 +121,7 @@ const plugin: FastifyPluginAsync = async (fastify) => {
         await workerUtils.release();
       }
 
-      return reply.status(201).send({
-        success: true,
-        data: { documentId },
-      });
+      return reply.status(201).send({ documentId });
     },
   );
 
@@ -167,7 +164,7 @@ const plugin: FastifyPluginAsync = async (fastify) => {
         .where("id", "=", id)
         .execute();
 
-      return { success: true, data: { id, state: "draft" } };
+      return reply.send({ success: true });
     },
   );
 
@@ -210,7 +207,7 @@ const plugin: FastifyPluginAsync = async (fastify) => {
         .where("id", "=", id)
         .execute();
 
-      return { success: true, data: { id, state: "user_review" } };
+      return reply.send({ success: true });
     },
   );
 };
