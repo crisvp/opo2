@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import { usePlaceList, useStateDetail } from "../../api/queries/locations";
 
@@ -7,6 +7,15 @@ const route = useRoute();
 const usps = computed(() => route.params.usps as string);
 const { data: state } = useStateDetail(usps);
 const { data: places, isLoading, isError } = usePlaceList(usps);
+
+const filter = ref("");
+
+const filteredPlaces = computed(() => {
+  if (!places.value) return [];
+  const q = filter.value.trim().toLowerCase();
+  if (!q) return places.value;
+  return places.value.filter((p) => p.name.toLowerCase().includes(q));
+});
 </script>
 
 <template>
@@ -19,15 +28,24 @@ const { data: places, isLoading, isError } = usePlaceList(usps);
     <div v-if="isLoading" class="text-muted">Loading places…</div>
     <div v-else-if="isError" class="text-critical">Failed to load places.</div>
     <div v-else-if="!places?.length" class="text-muted">No places found.</div>
-    <ul v-else class="divide-y divide-default">
-      <li v-for="place in places" :key="place.geoid">
-        <RouterLink
-          :to="`/locations/places/${place.geoid}`"
-          class="flex items-center py-3 hover:bg-sunken px-2 rounded transition-colors"
-        >
-          <span class="font-medium text-primary">{{ place.name }}</span>
-        </RouterLink>
-      </li>
-    </ul>
+    <template v-else>
+      <input
+        v-model="filter"
+        type="search"
+        placeholder="Filter places…"
+        class="w-full max-w-sm mb-4 px-3 py-2 rounded-lg border border-default bg-surface text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary"
+      />
+      <p v-if="filter && !filteredPlaces.length" class="text-muted text-sm">No places match "{{ filter }}".</p>
+      <ul v-else class="divide-y divide-default">
+        <li v-for="place in filteredPlaces" :key="place.geoid">
+          <RouterLink
+            :to="`/locations/places/${place.geoid}`"
+            class="flex items-center py-3 hover:bg-sunken px-2 rounded transition-colors"
+          >
+            <span class="font-medium text-primary">{{ place.name }}</span>
+          </RouterLink>
+        </li>
+      </ul>
+    </template>
   </div>
 </template>
