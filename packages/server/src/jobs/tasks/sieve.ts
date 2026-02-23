@@ -54,6 +54,7 @@ export async function sieve(rawPayload: unknown, helpers: JobHelpers): Promise<v
 
   const db = getDb(process.env.DATABASE_URL!);
   const startedAt = new Date();
+  let uploaderId: string | null = null;
 
   try {
     // Fetch the document to get uploader_id for LLM call logging
@@ -63,7 +64,7 @@ export async function sieve(rawPayload: unknown, helpers: JobHelpers): Promise<v
       .where("id", "=", documentId)
       .executeTakeFirst();
 
-    const uploaderId = doc?.uploader_id ?? null;
+    uploaderId = doc?.uploader_id ?? null;
 
     const dataUrl = await getFileAsDataUrl(s3Key);
 
@@ -178,10 +179,10 @@ export async function sieve(rawPayload: unknown, helpers: JobHelpers): Promise<v
           started_at: startedAt,
           completed_at: failedAt,
           processing_time_ms: failedAt.getTime() - startedAt.getTime(),
-          input_tokens: 0,
-          output_tokens: 0,
-          total_tokens: 0,
-          user_id: null,
+          input_tokens: null,
+          output_tokens: null,
+          total_tokens: null,
+          user_id: uploaderId,
           used_system_key: true,
           cost_cents: null,
           error_code: null,

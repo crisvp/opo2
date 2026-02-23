@@ -63,6 +63,7 @@ export async function extractor(rawPayload: unknown, helpers: JobHelpers): Promi
 
   const db = getDb(process.env.DATABASE_URL!);
   const startedAt = new Date();
+  let uploaderId: string | null = null;
 
   try {
     // Check if AI extraction is enabled for this document; also fetch uploader_id for LLM call logging
@@ -72,7 +73,7 @@ export async function extractor(rawPayload: unknown, helpers: JobHelpers): Promi
       .where("id", "=", documentId)
       .executeTakeFirst();
 
-    const uploaderId = doc?.uploader_id ?? null;
+    uploaderId = doc?.uploader_id ?? null;
 
     if (!doc?.use_ai_extraction) {
       helpers.logger.info(`AI extraction disabled for document ${documentId}, skipping`);
@@ -253,10 +254,10 @@ export async function extractor(rawPayload: unknown, helpers: JobHelpers): Promi
           started_at: startedAt,
           completed_at: failedAt,
           processing_time_ms: failedAt.getTime() - startedAt.getTime(),
-          input_tokens: 0,
-          output_tokens: 0,
-          total_tokens: 0,
-          user_id: null,
+          input_tokens: null,
+          output_tokens: null,
+          total_tokens: null,
+          user_id: uploaderId,
           used_system_key: true,
           cost_cents: null,
           error_code: null,
