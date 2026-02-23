@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
-import type { ProfileResponse, UpdateProfileInput, UserUsage, UserTierInfo } from "@opo/shared";
+import type { ProfileResponse, UpdateProfileInput, UserUsage, UserTierInfo, SetApiKeyInput } from "@opo/shared";
 import { apiClient } from "../client";
 
 export const profileKeys = {
@@ -78,7 +78,7 @@ export function useUpdateProfileLocation() {
 export function useSetApiKey() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: unknown) => apiClient.post<unknown>("/profile/api-keys", input),
+    mutationFn: (input: SetApiKeyInput) => apiClient.post<{ success: boolean }>("/profile/api-keys", input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.apiKeys() });
     },
