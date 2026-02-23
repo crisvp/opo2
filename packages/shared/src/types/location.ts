@@ -67,5 +67,8 @@ export const nearestPlacesRequestSchema = z.object({
 export type NearestPlacesRequest = z.infer<typeof nearestPlacesRequestSchema>;
 
 export function formatPlaceDisplayName(place: Place): string {
+  if (place.lsad) {
+    return `${place.name} (${place.lsad}), ${place.usps}`;
+  }
   return `${place.name}, ${place.usps}`;
 }

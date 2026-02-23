@@ -80,7 +80,7 @@ const STATUS_OPTIONS = [
   { label: "Completed", value: "completed" },
   { label: "Failed", value: "failed" },
   { label: "Cancelled", value: "cancelled" },
-] as const;
+];
 
 const selectedStatus = ref<string | null>(null);
 

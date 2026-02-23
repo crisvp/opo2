@@ -34,24 +34,28 @@ describe("createDocumentSchema", () => {
 });
 
 describe("initiateUploadSchema", () => {
+  const validBase = {
+    filename: "file.pdf",
+    mimetype: "application/pdf",
+    governmentLevel: "state" as const,
+    stateUsps: "IA",
+    useAi: false,
+  };
+
   it("rejects files over 50 MB", () => {
-    const result = initiateUploadSchema.safeParse({
-      title: "Test",
-      filename: "file.pdf",
-      contentType: "application/pdf",
-      contentLength: 52_428_801,
-    });
+    const result = initiateUploadSchema.safeParse({ ...validBase, size: 52_428_801 });
     expect(result.success).toBe(false);
   });
 
   it("accepts max 50 MB", () => {
-    const result = initiateUploadSchema.safeParse({
-      title: "Test",
-      filename: "file.pdf",
-      contentType: "application/pdf",
-      contentLength: 52_428_800,
-    });
+    const result = initiateUploadSchema.safeParse({ ...validBase, size: 52_428_800 });
     expect(result.success).toBe(true);
+  });
+
+  it("rejects when governmentLevel is missing", () => {
+    const { governmentLevel: _, ...withoutLevel } = { ...validBase, size: 1024 };
+    const result = initiateUploadSchema.safeParse(withoutLevel);
+    expect(result.success).toBe(false);
   });
 });
 

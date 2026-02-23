@@ -404,7 +404,7 @@ describe("Admin — authenticated business logic", () => {
         method: "POST",
         url: "/api/documents/initiate",
         headers: { cookie: victim.cookie },
-        payload: { title: "Victim Doc", filename: "victim.pdf", mimetype: "application/pdf", size: 1024 },
+        payload: { filename: "victim.pdf", mimetype: "application/pdf", size: 1024, governmentLevel: "state", stateUsps: "IA", useAi: false },
       });
       const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
 
@@ -412,7 +412,7 @@ describe("Admin — authenticated business logic", () => {
         method: "POST",
         url: `/api/documents/${documentId}/confirm-upload`,
         headers: { cookie: victim.cookie },
-        payload: { saveAsDraft: true },
+        payload: { objectKey: `documents/${documentId}/victim.pdf` },
       });
 
       // Delete user

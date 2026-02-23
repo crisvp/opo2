@@ -220,7 +220,7 @@ describe("createDocumentSchema", () => {
   it("rejects invalid government level", () => {
     const result = createDocumentSchema.safeParse({
       title: "Test",
-      governmentLevel: "county",
+      governmentLevel: "invalid-level",
     });
     expect(result.success).toBe(false);
   });

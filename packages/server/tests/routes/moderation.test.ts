@@ -79,7 +79,14 @@ async function seedDocumentInModeratorReview(
     method: "POST",
     url: "/api/documents/initiate",
     headers: { cookie: uploaderCookie },
-    payload: { title: docTitle, filename: "test.pdf", mimetype: "application/pdf", size: 1024 },
+    payload: {
+      filename: `${docTitle}.pdf`,
+      mimetype: "application/pdf",
+      size: 1024,
+      governmentLevel: "state",
+      stateUsps: "IA",
+      useAi: false,
+    },
   });
   const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
 
@@ -88,7 +95,7 @@ async function seedDocumentInModeratorReview(
     method: "POST",
     url: `/api/documents/${documentId}/confirm-upload`,
     headers: { cookie: uploaderCookie },
-    payload: { saveAsDraft: false },
+    payload: { objectKey: `documents/${documentId}/${docTitle}.pdf` },
   });
 
   // Directly set state to moderator_review in DB (bypassing the processing pipeline)
@@ -252,7 +259,7 @@ describe("Moderation — state transition business logic", () => {
         method: "POST",
         url: "/api/documents/initiate",
         headers: { cookie: uploaderCookie },
-        payload: { title: "Wrong State Doc", filename: "ws.pdf", mimetype: "application/pdf", size: 1024 },
+        payload: { filename: "ws.pdf", mimetype: "application/pdf", size: 1024, governmentLevel: "state", stateUsps: "IA", useAi: false },
       });
       const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
 
@@ -260,7 +267,7 @@ describe("Moderation — state transition business logic", () => {
         method: "POST",
         url: `/api/documents/${documentId}/confirm-upload`,
         headers: { cookie: uploaderCookie },
-        payload: { saveAsDraft: false },
+        payload: { objectKey: `documents/${documentId}/ws.pdf` },
       });
       // Document is now in "submitted" state — approve should fail
 
@@ -312,7 +319,7 @@ describe("Moderation — state transition business logic", () => {
         method: "POST",
         url: "/api/documents/initiate",
         headers: { cookie: uploaderCookie },
-        payload: { title: "Wrong State Reject", filename: "wsr.pdf", mimetype: "application/pdf", size: 1024 },
+        payload: { filename: "wsr.pdf", mimetype: "application/pdf", size: 1024, governmentLevel: "state", stateUsps: "IA", useAi: false },
       });
       const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
 
@@ -320,9 +327,9 @@ describe("Moderation — state transition business logic", () => {
         method: "POST",
         url: `/api/documents/${documentId}/confirm-upload`,
         headers: { cookie: uploaderCookie },
-        payload: { saveAsDraft: true },
+        payload: { objectKey: `documents/${documentId}/wsr.pdf` },
       });
-      // Document is now in "draft" state
+      // Document is now in "submitted" state (was "draft" with old saveAsDraft flow)
 
       const res = await app.inject({
         method: "POST",

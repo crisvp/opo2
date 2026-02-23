@@ -242,8 +242,8 @@ describe("GOVERNMENT_LEVELS", () => {
     expect(GOVERNMENT_LEVELS.TRIBAL).toBe("tribal");
   });
 
-  it("has exactly four levels", () => {
-    expect(Object.keys(GOVERNMENT_LEVELS)).toHaveLength(4);
+  it("has exactly five levels (federal, state, county, place, tribal)", () => {
+    expect(Object.keys(GOVERNMENT_LEVELS)).toHaveLength(5);
   });
 });
 
