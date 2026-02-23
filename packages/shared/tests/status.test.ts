@@ -4,6 +4,7 @@ import {
   REVIEW_STATES,
   DELETABLE_STATES,
   TERMINAL_STATES,
+  PROCESSING_STATES,
   isValidStateTransition,
 } from "../src/constants/status";
 
@@ -24,6 +25,21 @@ describe("VALID_STATE_TRANSITIONS", () => {
   });
   it("approved has no transitions", () => {
     expect(VALID_STATE_TRANSITIONS.approved).toEqual([]);
+  });
+});
+
+describe("PROCESSING_STATES", () => {
+  it("contains submitted", () => {
+    expect(PROCESSING_STATES).toContain("submitted");
+  });
+  it("contains processing", () => {
+    expect(PROCESSING_STATES).toContain("processing");
+  });
+  it("does not contain user_review", () => {
+    expect(PROCESSING_STATES).not.toContain("user_review");
+  });
+  it("does not contain draft", () => {
+    expect(PROCESSING_STATES).not.toContain("draft");
   });
 });
 
@@ -73,5 +89,14 @@ describe("isValidStateTransition", () => {
   });
   it("disallows draft → submitted", () => {
     expect(isValidStateTransition("draft", "submitted")).toBe(false);
+  });
+  it("disallows processing → approved (must pass through review)", () => {
+    expect(isValidStateTransition("processing", "approved")).toBe(false);
+  });
+  it("disallows moderator_review → draft", () => {
+    expect(isValidStateTransition("moderator_review", "draft")).toBe(false);
+  });
+  it("disallows approved → rejected (terminal state)", () => {
+    expect(isValidStateTransition("approved", "rejected")).toBe(false);
   });
 });
