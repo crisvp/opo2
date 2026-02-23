@@ -1,6 +1,9 @@
 import type { FastifyPluginAsync } from "fastify";
 
 const documentsRoutes: FastifyPluginAsync = async (fastify) => {
+  // actions must be registered before other /:id routes to prevent
+  // "import-from-dc" being captured as an :id parameter
+  await fastify.register(import("./actions.js"));
   await fastify.register(import("./list.js"));
   await fastify.register(import("./upload.js"));
   await fastify.register(import("./detail.js"));

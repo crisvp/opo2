@@ -1002,3 +1002,274 @@ describe("GET /api/documents/my-uploads — owner sees own documents", () => {
     expect(ids).toContain(documentId);
   }, 60_000);
 });
+
+// ---------------------------------------------------------------------------
+// POST /api/documents/:id/save-draft — unauthenticated guard
+// ---------------------------------------------------------------------------
+
+describe("POST /api/documents/:id/save-draft — unauthenticated guard", () => {
+  let app: FastifyInstance;
+
+  beforeAll(async () => {
+    app = await buildApp({ testing: true });
+  }, 30_000);
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it("returns 401 without authentication", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/documents/fake-id/save-draft",
+    });
+    expect(res.statusCode).toBe(401);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/documents/:id/reopen — unauthenticated guard
+// ---------------------------------------------------------------------------
+
+describe("POST /api/documents/:id/reopen — unauthenticated guard", () => {
+  let app: FastifyInstance;
+
+  beforeAll(async () => {
+    app = await buildApp({ testing: true });
+  }, 30_000);
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it("returns 401 without authentication", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/documents/fake-id/reopen",
+    });
+    expect(res.statusCode).toBe(401);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/documents/import-from-dc — unauthenticated guard
+// ---------------------------------------------------------------------------
+
+describe("POST /api/documents/import-from-dc — unauthenticated guard", () => {
+  let app: FastifyInstance;
+
+  beforeAll(async () => {
+    app = await buildApp({ testing: true });
+  }, 30_000);
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it("returns 401 without authentication", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/documents/import-from-dc",
+      payload: {
+        documentCloudId: 123,
+        governmentLevel: "state",
+        stateUsps: "IA",
+        useAi: true,
+      },
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
+  it("returns 400 when governmentLevel is missing (schema validation before auth)", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/documents/import-from-dc",
+      payload: {
+        documentCloudId: 123,
+        useAi: true,
+      },
+    });
+    // Schema validation fires before auth preHandler
+    expect(res.statusCode).toBe(400);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/documents/:id/save-draft — state transition business logic
+// ---------------------------------------------------------------------------
+
+describe("POST /api/documents/:id/save-draft — state transitions", () => {
+  let app: FastifyInstance;
+  let cookie: string;
+
+  beforeAll(async () => {
+    app = await buildApp({ testing: true });
+    const auth = await registerAndSignIn(app, `save-draft-${Date.now()}`);
+    cookie = auth.cookie;
+  }, 60_000);
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it("returns 404 for non-existent document", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/documents/nonexistent-save-draft-xyz/save-draft",
+      headers: { cookie },
+    });
+    expect(res.statusCode).toBe(404);
+    const body = res.json<{ success: boolean }>();
+    expect(body.success).toBe(false);
+  }, 30_000);
+
+  it("transitions user_review → draft and returns success", async () => {
+    // Initiate upload to get a document
+    const initiateRes = await app.inject({
+      method: "POST",
+      url: "/api/documents/initiate",
+      headers: { cookie },
+      payload: {
+        filename: "save-draft-test.pdf",
+        mimetype: "application/pdf",
+        size: 1024,
+        governmentLevel: "federal",
+        useAi: false,
+      },
+    });
+    const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
+
+    // Directly set document state to user_review
+    await (app as FastifyInstance & { db: { updateTable: (t: string) => { set: (v: unknown) => { where: (c: string, o: string, v: unknown) => { execute: () => Promise<void> } } } } }).db
+      .updateTable("documents")
+      .set({ state: "user_review", updated_at: new Date() } as never)
+      .where("id" as never, "=", documentId as never)
+      .execute();
+
+    const res = await app.inject({
+      method: "POST",
+      url: `/api/documents/${documentId}/save-draft`,
+      headers: { cookie },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json<{ success: boolean; data: { id: string; state: string } }>();
+    expect(body.success).toBe(true);
+    expect(body.data.state).toBe("draft");
+  }, 60_000);
+
+  it("returns 422 when document is not in user_review state", async () => {
+    const initiateRes = await app.inject({
+      method: "POST",
+      url: "/api/documents/initiate",
+      headers: { cookie },
+      payload: {
+        filename: "wrong-state.pdf",
+        mimetype: "application/pdf",
+        size: 1024,
+        governmentLevel: "federal",
+        useAi: false,
+      },
+    });
+    const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
+    // Document is in pending_upload state — save-draft should fail
+
+    const res = await app.inject({
+      method: "POST",
+      url: `/api/documents/${documentId}/save-draft`,
+      headers: { cookie },
+    });
+    expect(res.statusCode).toBe(422);
+    const body = res.json<{ success: boolean }>();
+    expect(body.success).toBe(false);
+  }, 60_000);
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/documents/:id/reopen — state transition business logic
+// ---------------------------------------------------------------------------
+
+describe("POST /api/documents/:id/reopen — state transitions", () => {
+  let app: FastifyInstance;
+  let cookie: string;
+
+  beforeAll(async () => {
+    app = await buildApp({ testing: true });
+    const auth = await registerAndSignIn(app, `reopen-${Date.now()}`);
+    cookie = auth.cookie;
+  }, 60_000);
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it("returns 404 for non-existent document", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/documents/nonexistent-reopen-xyz/reopen",
+      headers: { cookie },
+    });
+    expect(res.statusCode).toBe(404);
+    const body = res.json<{ success: boolean }>();
+    expect(body.success).toBe(false);
+  }, 30_000);
+
+  it("transitions rejected → user_review and returns success", async () => {
+    const initiateRes = await app.inject({
+      method: "POST",
+      url: "/api/documents/initiate",
+      headers: { cookie },
+      payload: {
+        filename: "reopen-test.pdf",
+        mimetype: "application/pdf",
+        size: 1024,
+        governmentLevel: "state",
+        stateUsps: "CA",
+        useAi: false,
+      },
+    });
+    const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
+
+    // Directly set document state to rejected
+    await (app as FastifyInstance & { db: { updateTable: (t: string) => { set: (v: unknown) => { where: (c: string, o: string, v: unknown) => { execute: () => Promise<void> } } } } }).db
+      .updateTable("documents")
+      .set({ state: "rejected", updated_at: new Date() } as never)
+      .where("id" as never, "=", documentId as never)
+      .execute();
+
+    const res = await app.inject({
+      method: "POST",
+      url: `/api/documents/${documentId}/reopen`,
+      headers: { cookie },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json<{ success: boolean; data: { id: string; state: string } }>();
+    expect(body.success).toBe(true);
+    expect(body.data.state).toBe("user_review");
+  }, 60_000);
+
+  it("returns 422 when document is not in rejected state", async () => {
+    const initiateRes = await app.inject({
+      method: "POST",
+      url: "/api/documents/initiate",
+      headers: { cookie },
+      payload: {
+        filename: "wrong-state-reopen.pdf",
+        mimetype: "application/pdf",
+        size: 1024,
+        governmentLevel: "federal",
+        useAi: false,
+      },
+    });
+    const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
+    // Document is in pending_upload state — reopen should fail
+
+    const res = await app.inject({
+      method: "POST",
+      url: `/api/documents/${documentId}/reopen`,
+      headers: { cookie },
+    });
+    expect(res.statusCode).toBe(422);
+    const body = res.json<{ success: boolean }>();
+    expect(body.success).toBe(false);
+  }, 60_000);
+});
