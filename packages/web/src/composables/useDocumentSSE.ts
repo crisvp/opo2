@@ -13,8 +13,8 @@ export function useDocumentSSE() {
   let eventSource: EventSource | null = null;
 
   function invalidateAndRefetch(queryKey: readonly unknown[]) {
-    queryClient.invalidateQueries({ queryKey });
-    queryClient.refetchQueries({ queryKey });
+    void queryClient.invalidateQueries({ queryKey });
+    void queryClient.refetchQueries({ queryKey });
   }
 
   function connect() {

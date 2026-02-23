@@ -22,7 +22,7 @@ const doc = computed(() => data.value);
 
 const viewMode = computed(() => {
   const state = doc.value?.state;
-  if (!state) return "loading";
+  if (!state) return "processing"; // doc loaded but state absent — treat as still processing
   if (state === "pending_upload" || (PROCESSING_STATES as string[]).includes(state))
     return "processing";
   if ((REVIEW_STATES as string[]).includes(state)) return "review";
