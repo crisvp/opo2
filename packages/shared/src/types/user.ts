@@ -65,3 +65,38 @@ export const updateApiKeySettingsSchema = z.object({
 });
 
 export type UpdateApiKeySettingsInput = z.infer<typeof updateApiKeySettingsSchema>;
+
+export const profileResponseSchema = z.object({
+  id: z.string(),
+  name: z.string().nullable(),
+  email: z.string().email(),
+  role: z.enum(["admin", "moderator", "user"]),
+  tier: z.number().int().positive(),
+  tierName: z.string(),
+  aiSuggestions: z.object({
+    enabled: z.boolean(),
+    available: z.boolean(),
+    usingOwnKey: z.boolean(),
+    limits: z.object({
+      monthly: z.number().nullable(),
+      used: z.number(),
+      remaining: z.number().nullable(),
+    }),
+  }),
+  location: z.object({
+    stateUsps: z.string().nullable(),
+    placeGeoid: z.string().nullable(),
+  }),
+  createdAt: z.coerce.date(),
+});
+
+export type ProfileResponse = z.infer<typeof profileResponseSchema>;
+
+export const updateProfileSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  aiSuggestionsEnabled: z.boolean().optional(),
+  stateUsps: z.string().length(2).nullable().optional(),
+  placeGeoid: z.string().nullable().optional(),
+});
+
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

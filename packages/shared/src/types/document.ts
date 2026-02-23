@@ -18,20 +18,35 @@ export const createDocumentSchema = z.object({
 
 export type CreateDocumentInput = z.infer<typeof createDocumentSchema>;
 
-export const initiateUploadSchema = createDocumentSchema.extend({
-  filename: z.string().min(1).max(255),
-  contentType: z.string().min(1),
-  contentLength: z.number().int().min(1).max(52_428_800),
+export const initiateUploadSchema = z.object({
+  filename: z.string().min(1).max(500),
+  mimetype: z.string().min(1),
+  size: z.number().int().positive().max(52_428_800), // 50 MB
+  governmentLevel: z.enum(["federal", "state", "place", "tribal"]),
+  stateUsps: z.string().length(2).optional(),
+  placeGeoid: z.string().optional(),
+  tribeId: z.string().optional(),
+  useAi: z.boolean(),
 });
 
 export type InitiateUploadInput = z.infer<typeof initiateUploadSchema>;
 
 export const confirmUploadSchema = z.object({
-  s3Key: z.string().min(1),
-  saveAsDraft: z.boolean().optional().default(false),
+  objectKey: z.string().min(1),
 });
 
 export type ConfirmUploadInput = z.infer<typeof confirmUploadSchema>;
+
+export const importFromDcSchema = z.object({
+  documentCloudId: z.number().int().positive(),
+  governmentLevel: z.enum(["federal", "state", "place", "tribal"]),
+  stateUsps: z.string().length(2).optional(),
+  placeGeoid: z.string().optional(),
+  tribeId: z.string().optional(),
+  useAi: z.boolean(),
+});
+
+export type ImportFromDcInput = z.infer<typeof importFromDcSchema>;
 
 export const updateDocumentSchema = z.object({
   title: z.string().min(1).max(500).optional(),
