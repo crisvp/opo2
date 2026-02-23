@@ -304,79 +304,89 @@
 
 **Acceptance Criteria:**
 
-- Authenticated users can upload documents (PDF, Office formats, images, CSV, text)
-- Upload wizard collects: file, title, description, document date, government level, location, category, tags, government entity
+- Authenticated users can upload documents (PDF, Office formats, images, CSV, text) OR import a single document from DocumentCloud
+- Upload form collects: file or DC selection (mutually exclusive), Document Source (required), AI toggle (if available)
+- **Document Source** is the only required metadata field at upload time — all other metadata (title, description, date, tags, category) is collected during the review stage
 - File size limit: 50 MB
 - **Files upload directly to S3 via presigned POST URL — never through Fastify**
-- Users choose "Save as Draft" or "Submit" (triggers processing pipeline)
+- All uploads immediately submit for processing — no "save as draft" option at upload
 - Tier-based upload limits enforced (admins exempt)
+- AI toggle shown only when AI is available; defaults to user's `ai_suggestions_enabled` profile preference
 
-**Upload Flow (two-step presigned URL):**
+**Upload Flow (file path — two-step presigned URL):**
 
-1. **Step 1 — Initiate:** `POST /api/documents/initiate` with metadata (title, description, filename, mimetype, size, etc.). Fastify validates metadata and tier limits, creates a `documents` row in `pending_upload` state, generates an S3 presigned POST URL scoped to a specific key, and returns both the document ID and presigned URL.
+1. **Step 1 — Initiate:** `POST /api/documents/initiate` with file metadata + Document Source + useAi flag. Fastify validates and creates a `documents` row in `pending_upload` state.
 2. **Step 2 — Browser uploads file directly to S3** using the presigned URL. No data touches Fastify.
-3. **Step 3 — Confirm:** `POST /api/documents/:id/confirm-upload`. Fastify verifies the S3 object exists and matches expected size/type, updates the document state from `pending_upload` to `draft` (if save-as-draft) or `submitted` (if immediate submit), and enqueues the processing pipeline if submitted.
-4. **Abandoned uploads:** A cleanup task deletes `pending_upload` documents older than 1 hour (and their S3 objects if present).
+3. **Step 3 — Confirm:** `POST /api/documents/:id/confirm-upload`. Fastify verifies S3 object, transitions `pending_upload → submitted`, enqueues the processing pipeline.
+4. **Abandoned uploads:** A cleanup task deletes `pending_upload` documents older than 1 hour.
+
+**Upload Flow (DocumentCloud import path):**
+
+1. `POST /api/documents/import-from-dc` with `{ documentCloudId, governmentLevel, stateUsps?, placeGeoid?, tribeId?, useAi }`.
+2. Server creates document + enqueues `documentcloud_import` worker job.
+3. Returns `{ documentId }`. Frontend navigates to `/documents/:id`.
 
 **API Endpoints:**
 
 - `POST /api/documents/initiate` — Create pending upload, get presigned URL
 - `POST /api/documents/:id/confirm-upload` — Confirm file uploaded to S3
+- `POST /api/documents/import-from-dc` — Single DC document import (regular users)
 
 Request body (initiate, JSON):
-- `title`: string (1-500)
 - `filename`: string
 - `mimetype`: string (validated against allowlist)
 - `size`: number (max 50MB)
-- `description`: string (optional, max 5000)
-- `documentDate`: ISO date string (optional)
-- `governmentLevel`: federal|state|place|tribal (optional)
-- `stateUsps`: string(2) (optional)
-- `placeGeoid`: string (optional)
-- `tribeId`: string (optional)
-- `category`: string (optional)
-- `tags`: string[] (optional)
-- `governmentEntityId`: string (optional)
-- `saveAsDraft`: boolean (default false)
+- `governmentLevel`: federal|state|place|tribal (required)
+- `stateUsps`: string(2) (conditional)
+- `placeGeoid`: string (conditional)
+- `tribeId`: string (conditional)
+- `useAi`: boolean
 
 Response (initiate):
 - `documentId`: string
 - `presignedUrl`: string (S3 presigned POST URL)
 - `presignedFields`: Record<string, string> (form fields for S3 POST)
-- `objectKey`: string (the S3 key the file will be stored at)
+- `objectKey`: string
 
 Request body (confirm-upload, JSON):
 - `objectKey`: string (must match the key from initiate)
+- `useAi`: boolean
+
+Request body (import-from-dc, JSON):
+- `documentCloudId`: number
+- `governmentLevel`: federal|state|place|tribal (required)
+- `stateUsps`: string(2) (conditional)
+- `placeGeoid`: string (conditional)
+- `tribeId`: string (conditional)
+- `useAi`: boolean
 
 **Frontend Components:**
 
-- `UploadView` — Upload wizard page
-- `FileDropzone` — Drag-and-drop file input
-- `UploadMetadataForm` — Title, description, date, category, government entity
-- `UploadLocationForm` — Location selector step
+- `UploadView` — Single-page upload form (file dropzone OR DC search tab, Document Source, AI toggle)
+- `FileDropzone` — Drag-and-drop file input (unchanged)
+- `DocumentSourceAutocomplete` — Searches states, places, tribes with disambiguating labels
 - `UploadProgress` — S3 direct upload progress indicator
 
 **State Management:**
 
-- **TanStack Query:** Initiate mutation, confirm mutation
-- **Pinia:** `useUploadWizardStore` — Multi-step form state (file, metadata, location, tags). Reset on navigation away.
+- **TanStack Query:** Initiate mutation, confirm mutation, import-from-dc mutation
+- **Pinia:** `useUploadWizardStore` — simplified: file/DC selection, Document Source, useAi flag. Reset on navigation away.
+- **Composable:** `useAiPreference` — session AI preference, reads from profile, allows per-session override
 
 **Validation:**
 
-- File: required, max 50 MB, allowed MIME types (PDF, JPEG, PNG, GIF, WebP, text, CSV, Word, Excel)
-- MIME type validated both client-side (before initiate) and server-side (in initiate handler + S3 presigned conditions)
-- Title: 1-500 characters
-- Description: max 5000 characters
-- Location consistency: validated per government level rules
+- File: required (or DC selection), max 50 MB, allowed MIME types (PDF, JPEG, PNG, GIF, WebP, text, CSV, Word, Excel)
+- MIME type validated both client-side and server-side
+- Document Source: required — `governmentLevel` + consistent location fields
 - Confirm: S3 object must exist, size must match declared size within tolerance
 
 **Test Cases:**
 
-- Unit: File validation (MIME, size), location validation, presigned URL generation
-- Integration: Initiate endpoint (tier limit enforcement), confirm endpoint (S3 verification), abandoned upload cleanup
-- E2E: Full upload flow (file selection → metadata → S3 upload → confirm)
+- Unit: File validation (MIME, size), location validation, presigned URL generation, AI availability check
+- Integration: Initiate endpoint (tier limit enforcement), confirm endpoint, import-from-dc endpoint, abandoned upload cleanup
+- E2E: Full upload flow (file selection → document source → S3 upload → confirm → document page)
 
-**Dependencies:** F01 (auth), F03 (location), F08 (catalog for government entity), F10 (tier limits), F15 (categories)
+**Dependencies:** F01 (auth), F03 (location), F10 (tier limits), F11 (API keys for AI availability), F12 (DC search components)
 
 ---
 
@@ -460,37 +470,45 @@ Timeouts are configured via `jobTimeout` in the Graphile Worker task definition.
 
 **Acceptance Criteria:**
 
-- Users can save uploads as drafts without triggering the processing pipeline
-- Drafts do not count toward usage limits until submitted
-- Users can edit drafts freely (DRAFT state is editable)
-- Submitting a draft checks upload and LLM limits, then enqueues processing
-- My Uploads page shows all user's documents grouped by state
-- Documents in `pending_upload` state (awaiting S3 upload confirmation) are not shown in My Uploads and are cleaned up after 1 hour
+- Draft is a "save my place during review" mechanism — not an upload-time option
+- Documents enter draft state from `user_review` when user clicks "Save as Draft"
+- Draft documents have already been processed; submitting goes directly to `moderator_review`
+- My Uploads page shows all user's documents grouped by state, including `user_review` count badge
+- Documents in `pending_upload` state are not shown in My Uploads and are cleaned up after 1 hour
+- Expired drafts (14+ days old) are deleted by the cleanup task (F23)
+
+**State transitions:**
+
+- `user_review → draft` ("Save as Draft" action during review)
+- `draft → moderator_review` (submit — skips processing, file was already processed)
 
 **API Endpoints:**
 
-- `POST /api/documents/:id/submit` — Submit a draft for processing
+- `POST /api/documents/:id/save-draft` — Transition `user_review → draft`
+- `POST /api/documents/:id/submit-for-moderation` — Transition `user_review → moderator_review` OR `draft → moderator_review`
 - `GET /api/documents/my-uploads` — List current user's documents (excludes `pending_upload`)
 
 **Frontend Components:**
 
-- `MyUploadsView` — User's document list grouped by state
+- `MyUploadsView` — User's document list grouped by state; shows `user_review` count badge
 
 **State Management:**
 
-- **TanStack Query:** My uploads query, submit mutation
+- **TanStack Query:** My uploads query, save-draft mutation, submit-for-moderation mutation
+- **Composable:** `useUserReviewCount` — counts `user_review` documents from my-uploads query; used for nav badge
 
 **Validation:**
 
-- Submit: document must be in DRAFT state, owned by current user, tier limits checked
+- `save-draft`: document must be in `user_review` state, owned by current user
+- `submit-for-moderation`: document must be in `user_review` or `draft` state, owned by current user
 
 **Test Cases:**
 
-- Unit: State transition validation (DRAFT → SUBMITTED)
-- Integration: Submit draft endpoint, limit enforcement
-- E2E: Upload as draft → edit → submit flow
+- Unit: State transition validation (`user_review → draft`, `draft → moderator_review`)
+- Integration: Save-draft endpoint, submit-for-moderation from both `user_review` and `draft` states
+- E2E: Upload → processing → review → save as draft → return → submit flow
 
-**Dependencies:** F02 (upload), F06 (processing), F10 (tier limits)
+**Dependencies:** F02 (upload), F06 (processing), F07 (review UI)
 
 ---
 
@@ -632,11 +650,23 @@ Timeouts are configured via `jobTimeout` in the Graphile Worker task definition.
 **Acceptance Criteria:**
 
 - Authenticated users receive live document status updates via SSE
-- Status changes appear without page refresh during processing
+- Status changes trigger immediate **refetch** (not just invalidation) so UI updates without user interaction
 - Moderators/admins receive broadcast events for all document changes
 - 30-second heartbeat keeps connection alive
 - Graceful reconnection on disconnect
 - PostgreSQL LISTEN/NOTIFY for cross-process communication
+- `document:ready_for_review` event triggers a toast notification (unless user is already on that document's page) and a "My Uploads" badge update
+- `profile:updated` event triggers a profile query refetch
+- "My Uploads" badge shows count of documents in `user_review` state; decrements when user transitions a document out of `user_review` (→ `draft` or → `moderator_review`)
+
+**SSE Events:**
+
+| Event | Payload | Triggered by | Frontend action |
+|-------|---------|--------------|-----------------|
+| `document:updated` | `{ id }` | Any document field update | Invalidate + refetch document detail |
+| `document:state_changed` | `{ id }` | Any state transition | Invalidate + refetch document detail + my-uploads |
+| `document:ready_for_review` | `{ id, title }` | `pipeline_complete` job when state → `user_review` | Refetch document; toast if not on that page; refetch my-uploads (badge update) |
+| `profile:updated` | `{ userId }` | DB trigger on `user` or `user_api_keys` UPDATE | Refetch profile query |
 
 **API Endpoints:**
 
@@ -645,19 +675,24 @@ Timeouts are configured via `jobTimeout` in the Graphile Worker task definition.
 
 **Frontend Components:**
 
-- `useDocumentSSE` composable — Connects to SSE, invalidates TanStack Query caches on events
+- `useDocumentSSE` composable — Connects to SSE, handles all document events (invalidate + refetch, toast)
+- `useProfileSSE` composable — Handles `profile:updated` events (or integrated into `useDocumentSSE`)
+- `useUserReviewCount` composable — Derives badge count from my-uploads query
 
 **State Management:**
 
-- **TanStack Query:** SSE events trigger query invalidation (document detail, my uploads, moderation queue)
+- **TanStack Query:** SSE events trigger query invalidation + immediate refetch (document detail, my-uploads, moderation queue, profile)
 - **Pinia:** None
+
+**Toast infrastructure:** `useToast` wrapper around PrimeVue toast service, called from `useDocumentSSE`. No Pinia store needed.
 
 **Test Cases:**
 
-- Unit: SSE message parsing, event routing logic
-- Integration: SSE connection, PostgreSQL NOTIFY propagation
+- Unit: SSE message parsing, event routing logic, toast trigger conditions
+- Integration: SSE connection, PostgreSQL NOTIFY propagation, `document:ready_for_review` emission from pipeline_complete
+- Integration: `profile:updated` emission from DB trigger on user/api_key update
 
-**Dependencies:** F01 (auth), PostgreSQL LISTEN/NOTIFY
+**Dependencies:** F01 (auth), F07 (review flow), PostgreSQL LISTEN/NOTIFY
 
 ---
 
@@ -667,44 +702,57 @@ Timeouts are configured via `jobTimeout` in the Graphile Worker task definition.
 
 **Acceptance Criteria:**
 
-- After processing completes (USER_REVIEW state), user sees AI-extracted metadata
-- Simple review form shows AI suggestions alongside editable fields
-- User can accept, modify, or discard each AI suggestion
-- Catalog matches (vendors, technologies, people, organizations) shown for confirmation
-- User submits for moderation after review
+- `/documents/:id` is a state-driven view: it renders a processing banner, review UI, rejected UI, or read-only detail depending on document state
+- When document is in `user_review` or `draft`: dual-mode review view (Review tab + Edit tab)
+- **Review tab** (default when AI data exists): per-field rows with accept/edit/discard actions; Submit enabled only after all fields are explicitly resolved
+- **Edit tab** (default when no AI data or AI was disabled): full form editor reusing `DocumentEditForm`, `DynamicMetadataForm`, `DocumentAssociationsEditor`
+- Switching tabs preserves in-progress edits via shared reactive form state
+- Both tabs offer "Save as Draft" and "Submit" actions
+- When document is in `processing`/`submitted`/`pending_upload`: shows processing banner with "You can safely leave this page" message; SSE event `document:ready_for_review` triggers refetch and banner disappears automatically
+- When document is `rejected`: shows read-only detail, rejection reason, and two buttons: **"Reimport"** (→ `/upload`) and **"Edit submission"** (`POST /api/documents/:id/reopen` → `rejected → user_review`)
 - Users can retry AI extraction if results are unsatisfactory
 - Admins can force re-run extraction on any document
 
 **API Endpoints:**
 
 - `GET /api/documents/:id/ai-metadata` — Get extraction results
-- `POST /api/documents/:id/submit-for-moderation` — Submit reviewed document
+- `POST /api/documents/:id/submit-for-moderation` — Submit reviewed document (`user_review` or `draft` → `moderator_review`)
+- `POST /api/documents/:id/save-draft` — Save as draft (`user_review → draft`) — see F19
+- `POST /api/documents/:id/reopen` — Reopen rejected document (`rejected → user_review`)
 - `POST /api/documents/:id/retry-extraction` — Retry AI extraction (owner)
 - `POST /api/documents/:id/admin-rerun-extraction` — Force re-run (admin)
 
 **Frontend Components:**
 
-- `AiReviewView` — AI metadata review page (route: `/documents/:id/ai-review`)
-- `AiSuggestionField` — Shows AI value with accept/edit/discard actions
+- `DocumentDetailView` — State-driven document page (route: `/documents/:id`); renders mode based on state
+- `ReviewView` — Dual-mode review UI embedded in `DocumentDetailView` for `user_review`/`draft` states
+- `AiSuggestionRow` — Single field row with accept/edit/discard actions
 - `AiCatalogMatchesPanel` — Shows matched catalog entries for confirmation
 - `AiExtractionStatus` — Shows extraction pipeline status
+- `DocumentEditForm`, `DynamicMetadataForm`, `DocumentAssociationsEditor` — Reused in Edit tab (unchanged)
+
+**Removed components:**
+
+- `AiReviewView` (route `/documents/:id/ai-review`) — functionality absorbed into `DocumentDetailView`
+- `DocumentEditView` (route `/documents/:id/edit`) — edit functionality moved into Review Edit tab
 
 **State Management:**
 
-- **TanStack Query:** AI metadata query, submit/retry mutations
+- **TanStack Query:** Document detail query (refetched on SSE events), AI metadata query, submit/retry/reopen mutations
 
 **Validation:**
 
-- Document must be in USER_REVIEW state for review
-- Document must be owned by current user (or admin for re-run)
+- `submit-for-moderation`: document must be in `user_review` or `draft` state, owned by current user
+- `reopen`: document must be in `rejected` state, owned by current user (or admin)
+- `retry-extraction`: document must be in `user_review` state
 
 **Test Cases:**
 
-- Unit: AI metadata response parsing
-- Integration: AI metadata endpoint, submit-for-moderation flow, retry flow
-- E2E: Full review → submit flow
+- Unit: AI metadata response parsing, state-to-mode mapping
+- Integration: AI metadata endpoint, submit-for-moderation (from both states), reopen endpoint, retry flow
+- E2E: Full review → submit flow; processing banner → SSE fires → review mode transition
 
-**Dependencies:** F06 (processing pipeline), F08 (catalog for entity matching)
+**Dependencies:** F06 (processing pipeline), F08 (catalog for entity matching), F13 (SSE for banner transition), F19 (draft)
 
 ---
 
@@ -982,37 +1030,76 @@ The `key_hash` column stores `SHA-256(plaintext_key)` for existence checks witho
 
 - Users set a "home" location (state + optional place)
 - Location persisted in `user_profiles` table
-- Profile page shows: user info, location preference, tier/usage info, API key management, security settings
+- Profile page shows: user info, location preference, tier/usage info, AI suggestions preference, API key management, security settings
 - Recent location tracked in localStorage for quick selection
+- `GET /api/profile` returns all non-sensitive profile data in a single consolidated response
+- Profile changes (user row or API key row updates) trigger a `profile:updated` SSE event so all open tabs update automatically
+
+**`GET /api/profile` response shape:**
+
+```typescript
+{
+  id: string,
+  name: string | null,
+  email: string,
+  role: "admin" | "moderator" | "user",
+  tier: number,
+  tierName: string,
+  aiSuggestions: {
+    enabled: boolean,          // ai_suggestions_enabled preference
+    available: boolean,        // can AI run right now
+    usingOwnKey: boolean,
+    limits: {
+      monthly: number | null,  // null = unlimited
+      used: number,
+      remaining: number | null
+    }
+  },
+  location: {
+    stateUsps: string | null,
+    placeGeoid: string | null
+  },
+  createdAt: string
+}
+```
 
 **API Endpoints:**
 
-- `GET /api/profile/location` — Get user location preference
-- `PUT /api/profile/location` — Update location preference
-- `GET /api/profile/usage` — Get user tier and usage info
+- `GET /api/profile` — Consolidated profile (replaces `/api/profile/location` + `/api/profile/usage`)
+- `PUT /api/profile` — Update profile fields: `{ name?, aiSuggestionsEnabled?, stateUsps?, placeGeoid? }`
+- `GET /api/profile/api-keys` — API key status (unchanged)
+- `PUT /api/profile/api-keys/openrouter` — Set key (unchanged)
+- `DELETE /api/profile/api-keys/openrouter` — Delete key (unchanged)
+- `PUT /api/profile/api-keys/openrouter/settings` — Update daily limit (unchanged)
+
+Legacy endpoints `GET /api/profile/location`, `PUT /api/profile/location`, and `GET /api/profile/usage` are deprecated (kept for backwards compatibility but not used by new frontend code).
 
 **Frontend Components:**
 
-- `ProfileView` — Profile page (combines location, usage, API keys)
+- `ProfileView` — Profile page (combines location, AI preference, usage, API keys)
 - `LocationPreferenceForm` — Location selector for profile
+- `AiPreferenceToggle` — Toggle for `ai_suggestions_enabled`
 - `useRecentLocation` composable — localStorage-based recent location
 
 **State Management:**
 
-- **TanStack Query:** Location preference query, usage query
-- **Pinia:** `useAuthStore` (user location cached after fetch)
+- **TanStack Query:** Profile query (`GET /api/profile`), profile update mutation, API key queries
+- **Pinia:** `useAuthStore` (user identity cached after fetch)
+- **Composable:** `useAiPreference` — reads from profile query, allows per-session override
 
 **Validation:**
 
 - State USPS: 2 characters (optional)
 - Place GEOID: valid string (optional, requires state)
+- `aiSuggestionsEnabled`: boolean
 
 **Test Cases:**
 
-- Integration: Location CRUD, usage info endpoint
-- Component: LocationPreferenceForm
+- Integration: Consolidated profile endpoint, profile update endpoint
+- Integration: `profile:updated` SSE event fires when user row or api_key row is updated
+- Component: AiPreferenceToggle, LocationPreferenceForm
 
-**Dependencies:** F01 (auth), F03 (location data)
+**Dependencies:** F01 (auth), F03 (location data), F11 (API keys for AI availability), F13 (SSE for profile updates)
 
 ---
 
@@ -1074,18 +1161,20 @@ If Redis is unavailable, challenge verification fails closed (rejects all attemp
 - Authenticated users can search DocumentCloud
 - Search results show title, description, page count, organization, canonical URL
 - Already-imported documents flagged in search results
-- Moderators can import individual documents or batch import (up to 100)
-- Import options: add tags, set government location
+- **Regular users** can import a single document via the upload form (Document Source required; see F02)
+- **Moderators** can import individual documents or batch import (up to 100) via `DocumentCloudSearchView`
+- Import options: set Document Source (government location); tags set during review stage
 - Import jobs tracked with progress (queued → running → completed)
 
 **API Endpoints:**
 
 - `GET /api/documentcloud/status` — DocumentCloud availability check
 - `GET /api/documentcloud/search` — Search DocumentCloud
-- `POST /api/documentcloud/import` — Import single document
-- `POST /api/documentcloud/import/batch` — Batch import (max 100)
+- `POST /api/documentcloud/import` — Import single document (moderator+)
+- `POST /api/documentcloud/import/batch` — Batch import (moderator+, max 100)
 - `GET /api/documentcloud/import/:jobId` — Get import job status
 - `GET /api/documentcloud/jobs` — List user's import jobs
+- `POST /api/documents/import-from-dc` — Single DC import for regular users (requires Document Source; defined in F02)
 
 **Frontend Components:**
 

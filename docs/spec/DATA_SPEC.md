@@ -88,6 +88,7 @@ export interface UserTierInfo {
 |--------|------|---------|-------|
 | `role` | `varchar(20)` | `'user'` | admin, moderator, user |
 | `tier` | `integer` | `1` | FK → `user_tiers.id` |
+| `ai_suggestions_enabled` | `boolean` | `true` | User preference for AI analysis during upload |
 
 ---
 
@@ -265,15 +266,15 @@ export const DOCUMENT_STATE = {
 export type DocumentState = (typeof DOCUMENT_STATE)[keyof typeof DOCUMENT_STATE];
 
 export const VALID_STATE_TRANSITIONS: Record<DocumentState, DocumentState[]> = {
-  pending_upload: ["draft", "submitted"],  // confirm-upload decides based on saveAsDraft
-  draft: ["submitted"],
+  pending_upload: ["submitted"],  // draft option removed from upload
+  draft: ["moderator_review"],    // draft always came from user_review (already processed)
   submitted: ["processing"],
   processing: ["user_review", "moderator_review", "processing_failed"],
   processing_failed: ["submitted"],
-  user_review: ["moderator_review"],
+  user_review: ["draft", "moderator_review"],
   moderator_review: ["approved", "rejected"],
   approved: [],
-  rejected: ["submitted"],
+  rejected: ["submitted", "user_review"], // "Reimport" → submitted, "Edit submission" → user_review
 };
 
 export function isValidStateTransition(from: DocumentState, to: DocumentState): boolean {
@@ -282,9 +283,11 @@ export function isValidStateTransition(from: DocumentState, to: DocumentState): 
 
 // State groups
 export const PROCESSING_STATES: DocumentState[] = ["submitted", "processing"];
-export const EDITABLE_STATES: DocumentState[] = ["draft", "processing_failed", "rejected"];
+export const REVIEW_STATES: DocumentState[] = ["user_review", "draft"]; // dual-mode review view
 export const DELETABLE_STATES: DocumentState[] = ["draft", "processing_failed", "rejected", "pending_upload"];
-export const TERMINAL_STATES: DocumentState[] = ["approved", "rejected"];
+export const TERMINAL_STATES: DocumentState[] = ["approved"];
+// Note: EDITABLE_STATES removed — editing now happens inside the review view for
+// user_review/draft. Rejected/processing_failed documents use Reimport or Retry flows.
 
 // pending_upload documents are transient — cleaned up after 1 hour by the
 // cleanup task. They are never shown in user-facing lists.
@@ -425,6 +428,10 @@ export interface DocumentListItem {
 **Trigger:** `document_state_notify` — sends PostgreSQL NOTIFY on `document_status_changes` channel when `state` column changes.
 
 **Note on user deletion:** The FK uses `ON DELETE SET NULL`. When an admin "deletes" a user, the application deletes the user row, and PostgreSQL automatically NULLs `uploader_id` on all their documents. Documents and S3 files are preserved. The UI displays "Deleted User" when `uploader_id` is NULL.
+
+**Trigger: `user_profile_notify`** — fires on UPDATE of the `user` table, sends `NOTIFY op_profile_changed` with `{ userId }` payload. Used to push `profile:updated` SSE events to the affected user.
+
+**Trigger: `user_api_keys_profile_notify`** — fires on UPDATE of the `user_api_keys` table, sends the same `NOTIFY op_profile_changed` notification. Ensures API key changes (e.g., daily limit update) are reflected in the user's profile SSE stream.
 
 ---
 
@@ -1186,19 +1193,24 @@ export function normalizeName(name: string): string {
 |--------|------|-------------|
 | `id` | `varchar` | PK (nanoid) |
 | `document_id` | `varchar` | FK → `documents.id`, nullable |
+| `user_id` | `varchar` | FK → `user.id` ON DELETE SET NULL, nullable |
 | `job_id` | `varchar` | nullable |
 | `task_type` | `varchar(30)` | NOT NULL |
 | `model_id` | `varchar(100)` | NOT NULL |
+| `used_system_key` | `boolean` | NOT NULL, DEFAULT false |
 | `status` | `varchar(20)` | NOT NULL |
 | `started_at` | `timestamptz` | NOT NULL |
 | `completed_at` | `timestamptz` | nullable |
 | `processing_time_ms` | `integer` | nullable |
 | `input_tokens` | `integer` | nullable |
 | `output_tokens` | `integer` | nullable |
+| `total_tokens` | `integer` | nullable (= input_tokens + output_tokens, stored for query convenience) |
 | `cost_cents` | `numeric(10,4)` | nullable |
 | `error_code` | `varchar(50)` | nullable |
 | `error_message` | `text` | nullable |
 | `response_summary` | `jsonb` | nullable |
+
+**Note:** Every LLM call must set `user_id` and `used_system_key`. OpenRouter returns full token counts and cost in every response — all fields must be populated from the response, never left null on success. Monthly AI usage is aggregated from this table per `user_id` per calendar month.
 
 ---
 
