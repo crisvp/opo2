@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { TASK_TIMEOUTS } from "../../config/processing.js";
 import { getDb } from "../../util/db.js";
+import { broadcastToUser } from "../../services/sse.js";
 
 export interface PipelineCompletePayload {
   documentId: string;
@@ -68,6 +69,22 @@ export async function pipelineComplete(
       .execute();
 
     helpers.logger.info(`Document ${documentId} transitioned to state: ${state}`);
+
+    // Emit SSE event when document is ready for user review
+    if (state === "user_review") {
+      const doc = await db
+        .selectFrom("documents")
+        .select(["title", "uploader_id"])
+        .where("id", "=", documentId)
+        .executeTakeFirst();
+
+      if (doc?.uploader_id) {
+        broadcastToUser(doc.uploader_id, "document:ready_for_review", {
+          id: documentId,
+          title: doc.title,
+        });
+      }
+    }
 
     // Send pg_notify for SSE
     const notifyPayload = JSON.stringify({ documentId, state });
