@@ -30,7 +30,7 @@ async function run() {
       )
     `);
 
-    const migrations = ["001_initial_schema.sql", "002_add_two_factor_enabled.sql", "003_seed_catalog_assoc_types.sql", "004_widen_places_lsad.sql"];
+    const migrations = ["001_initial_schema.sql", "002_add_two_factor_enabled.sql", "003_seed_catalog_assoc_types.sql", "004_widen_places_lsad.sql", "005_upload_review_flow.sql"];
 
     for (const migration of migrations) {
       const { rows } = await client.query(

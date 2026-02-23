@@ -259,6 +259,9 @@ export interface JobExecutionLogs {
 }
 
 export interface LlmCallLogs {
+  total_tokens: number | null;
+  used_system_key: Generated<boolean>;
+  user_id: string | null;
   completed_at: Timestamp | null;
   cost_cents: Numeric | null;
   document_id: string | null;
@@ -386,6 +389,7 @@ export interface TwoFactor {
 }
 
 export interface User {
+  ai_suggestions_enabled: Generated<boolean>;
   createdAt: Generated<Timestamp>;
   email: string;
   emailVerified: Generated<boolean>;
