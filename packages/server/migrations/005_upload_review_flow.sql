@@ -21,8 +21,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger on user table
-DROP TRIGGER IF EXISTS user_profile_notify ON "user";
-CREATE TRIGGER user_profile_notify
+CREATE OR REPLACE TRIGGER user_profile_notify
   AFTER UPDATE ON "user"
   FOR EACH ROW EXECUTE FUNCTION notify_profile_changed();
 
@@ -30,13 +29,12 @@ CREATE TRIGGER user_profile_notify
 CREATE OR REPLACE FUNCTION notify_profile_changed_api_keys()
 RETURNS trigger AS $$
 BEGIN
-  PERFORM pg_notify('op_profile_changed', json_build_object('userId', NEW.user_id)::text);
-  RETURN NEW;
+  PERFORM pg_notify('op_profile_changed', json_build_object('userId', COALESCE(NEW.user_id, OLD.user_id))::text);
+  RETURN COALESCE(NEW, OLD);
 END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger on user_api_keys table
-DROP TRIGGER IF EXISTS user_api_keys_profile_notify ON user_api_keys;
-CREATE TRIGGER user_api_keys_profile_notify
-  AFTER UPDATE ON user_api_keys
+CREATE OR REPLACE TRIGGER user_api_keys_profile_notify
+  AFTER INSERT OR UPDATE OR DELETE ON user_api_keys
   FOR EACH ROW EXECUTE FUNCTION notify_profile_changed_api_keys();
