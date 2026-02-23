@@ -1,0 +1,324 @@
+@import "tailwindcss";
+@import "primeicons/primeicons.css";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+@import "@fontsource/ibm-plex-sans/700.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/700.css";
+
+/**
+ * Semantic Design System Theme
+ *
+ * IMPORTANT: This project enforces semantic theming only.
+ * Direct color utilities like `text-red-500` or `bg-blue-200` are BANNED.
+ * Use semantic tokens like `text-critical`, `bg-surface`, `border-subtle`.
+ */
+
+/* ============================================================================
+   PRIMITIVE PALETTE (Internal Only)
+   These CSS variables are NOT exposed as Tailwind utilities.
+   They serve as the foundation for semantic tokens.
+   ============================================================================ */
+:root {
+  /* Gray Scale */
+  --primitive-gray-50: #f9fafb;
+  --primitive-gray-100: #f3f4f6;
+  --primitive-gray-200: #e5e7eb;
+  --primitive-gray-300: #d1d5db;
+  --primitive-gray-400: #9ca3af;
+  --primitive-gray-500: #6b7280;
+  --primitive-gray-600: #4b5563;
+  --primitive-gray-700: #374151;
+  --primitive-gray-800: #1f2937;
+  --primitive-gray-850: #18202f;
+  --primitive-gray-900: #111827;
+  --primitive-gray-950: #030712;
+
+  /* Red (Critical/Error) */
+  --primitive-red-50: #fef2f2;
+  --primitive-red-100: #fee2e2;
+  --primitive-red-400: #f87171;
+  --primitive-red-500: #ef4444;
+  --primitive-red-600: #dc2626;
+  --primitive-red-950: #450a0a;
+
+  /* Green (Success) */
+  --primitive-green-50: #f0fdf4;
+  --primitive-green-100: #dcfce7;
+  --primitive-green-400: #4ade80;
+  --primitive-green-500: #22c55e;
+  --primitive-green-600: #16a34a;
+  --primitive-green-950: #052e16;
+
+  /* Amber (Warning) */
+  --primitive-amber-50: #fffbeb;
+  --primitive-amber-100: #fef3c7;
+  --primitive-amber-400: #fbbf24;
+  --primitive-amber-500: #f59e0b;
+  --primitive-amber-600: #d97706;
+  --primitive-amber-950: #451a03;
+
+  /* Blue (Info/Interactive) */
+  --primitive-blue-50: #eff6ff;
+  --primitive-blue-100: #dbeafe;
+  --primitive-blue-400: #60a5fa;
+  --primitive-blue-500: #3b82f6;
+  --primitive-blue-600: #2563eb;
+  --primitive-blue-950: #172554;
+
+  /* Purple (Accent/Decorative) */
+  --primitive-purple-50: #faf5ff;
+  --primitive-purple-100: #f3e8ff;
+  --primitive-purple-400: #c084fc;
+  --primitive-purple-600: #9333ea;
+  --primitive-purple-950: #3b0764;
+
+  /* White/Black */
+  --primitive-white: #ffffff;
+  --primitive-black: #000000;
+
+  /* Fonts */
+  --font-sans:
+    "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono:
+    "IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+}
+
+/* ============================================================================
+   SEMANTIC TOKENS (Tailwind Utilities)
+   Only these tokens become Tailwind utility classes.
+   Usage: text-primary, bg-surface, border-subtle, ring-focus, etc.
+
+   NOTE: @theme defines the light mode defaults. Dark mode is handled via
+   CSS custom property overrides below.
+   ============================================================================ */
+@theme {
+  /* Remove ALL default Tailwind color utilities */
+  --color-*: initial;
+
+  /* Font families */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  /* -------------------------------------------------------------------------
+     SEMANTIC COLORS (Light Mode Defaults)
+     These create utilities like: text-primary, bg-surface, border-default, etc.
+     The --color-NAME creates: text-NAME, bg-NAME, border-NAME, ring-NAME
+     ------------------------------------------------------------------------- */
+
+  /* Primary colors for text/backgrounds */
+  --color-primary: var(--primitive-gray-900);
+  --color-secondary: var(--primitive-gray-700);
+  --color-muted: var(--primitive-gray-500);
+  --color-inverted: var(--primitive-white);
+
+  /* Semantic status colors */
+  --color-critical: var(--primitive-red-600);
+  --color-success: var(--primitive-green-600);
+  --color-warning: var(--primitive-amber-600);
+  --color-info: var(--primitive-blue-600);
+  --color-link: var(--primitive-blue-600);
+
+  /* Surface/Background colors */
+  --color-surface: var(--primitive-gray-100);
+  --color-surface-subtle: var(--primitive-gray-100);
+  --color-elevated: var(--primitive-white);
+  --color-sunken: var(--primitive-gray-100);
+
+  /* Status background colors (subtle) */
+  --color-critical-subtle: var(--primitive-red-50);
+  --color-success-subtle: var(--primitive-green-50);
+  --color-warning-subtle: var(--primitive-amber-50);
+  --color-info-subtle: var(--primitive-blue-50);
+
+  /* Interactive colors */
+  --color-interactive: var(--primitive-blue-600);
+  --color-interactive-hover: var(--primitive-blue-500);
+  --color-interactive-subtle: var(--primitive-blue-50);
+
+  /* Accent colors (decorative/branding elements) */
+  --color-accent: var(--primitive-purple-600);
+  --color-accent-subtle: var(--primitive-purple-50);
+
+  /* Border colors */
+  --color-default: var(--primitive-gray-200);
+  --color-subtle: var(--primitive-gray-100);
+  --color-strong: var(--primitive-gray-400);
+  --color-focus: var(--primitive-blue-500);
+
+  /* Ring offset color */
+  --color-offset: var(--primitive-white);
+
+  /* Special values */
+  --color-transparent: transparent;
+  --color-current: currentColor;
+}
+
+/* ============================================================================
+   DARK MODE (Override semantic tokens)
+   Uses CSS custom property overrides, not @theme, to avoid build-time issues.
+   ============================================================================ */
+
+/* Dark mode via class toggle (.dark on :root) */
+:root.dark {
+  --color-primary: var(--primitive-gray-100);
+  --color-secondary: var(--primitive-gray-300);
+  --color-muted: var(--primitive-gray-400);
+  --color-inverted: var(--primitive-white);
+
+  --color-critical: var(--primitive-red-400);
+  --color-success: var(--primitive-green-400);
+  --color-warning: var(--primitive-amber-400);
+  --color-info: var(--primitive-blue-400);
+  --color-link: var(--primitive-blue-400);
+
+  --color-surface: var(--primitive-gray-700);
+  --color-surface-subtle: var(--primitive-gray-850);
+  --color-elevated: var(--primitive-gray-800);
+  --color-sunken: rgb(255 255 255 / 0.08);
+
+  --color-critical-subtle: var(--primitive-red-950);
+  --color-success-subtle: var(--primitive-green-950);
+  --color-warning-subtle: var(--primitive-amber-950);
+  --color-info-subtle: var(--primitive-blue-950);
+
+  --color-interactive: var(--primitive-blue-500);
+  --color-interactive-hover: var(--primitive-blue-400);
+  --color-interactive-subtle: var(--primitive-blue-950);
+
+  --color-accent: var(--primitive-purple-400);
+  --color-accent-subtle: var(--primitive-purple-950);
+
+  --color-default: var(--primitive-gray-600);
+  --color-subtle: var(--primitive-gray-700);
+  --color-strong: var(--primitive-gray-500);
+  --color-focus: var(--primitive-blue-400);
+
+  --color-offset: var(--primitive-gray-900);
+}
+
+/* Dark mode via system preference (when no explicit class is set) */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --color-primary: var(--primitive-gray-100);
+    --color-secondary: var(--primitive-gray-300);
+    --color-muted: var(--primitive-gray-400);
+    --color-inverted: var(--primitive-white);
+
+    --color-critical: var(--primitive-red-400);
+    --color-success: var(--primitive-green-400);
+    --color-warning: var(--primitive-amber-400);
+    --color-info: var(--primitive-blue-400);
+    --color-link: var(--primitive-blue-400);
+
+    --color-surface: var(--primitive-gray-700);
+    --color-surface-subtle: var(--primitive-gray-850);
+    --color-elevated: var(--primitive-gray-800);
+    --color-sunken: rgb(255 255 255 / 0.08);
+
+    --color-critical-subtle: var(--primitive-red-950);
+    --color-success-subtle: var(--primitive-green-950);
+    --color-warning-subtle: var(--primitive-amber-950);
+    --color-info-subtle: var(--primitive-blue-950);
+
+    --color-interactive: var(--primitive-blue-500);
+    --color-interactive-hover: var(--primitive-blue-400);
+    --color-interactive-subtle: var(--primitive-blue-950);
+
+    --color-accent: var(--primitive-purple-400);
+    --color-accent-subtle: var(--primitive-purple-950);
+
+    --color-default: var(--primitive-gray-600);
+    --color-subtle: var(--primitive-gray-700);
+    --color-strong: var(--primitive-gray-500);
+    --color-focus: var(--primitive-blue-400);
+
+    --color-offset: var(--primitive-gray-900);
+  }
+}
+
+/* ============================================================================
+   FORCED COLORS MODE (High Contrast Accessibility)
+   Overrides semantic tokens to use system colors for WCAG compliance.
+   Uses CSS custom property overrides, not @theme.
+   ============================================================================ */
+@media (forced-colors: active) {
+  :root,
+  :root.dark,
+  :root.light {
+    --color-primary: CanvasText;
+    --color-secondary: CanvasText;
+    --color-muted: GrayText;
+    --color-inverted: Canvas;
+
+    --color-critical: CanvasText;
+    --color-success: CanvasText;
+    --color-warning: CanvasText;
+    --color-info: CanvasText;
+    --color-link: LinkText;
+
+    --color-surface: Canvas;
+    --color-surface-subtle: Canvas;
+    --color-elevated: Canvas;
+    --color-sunken: Canvas;
+
+    --color-critical-subtle: Canvas;
+    --color-success-subtle: Canvas;
+    --color-warning-subtle: Canvas;
+    --color-info-subtle: Canvas;
+
+    --color-interactive: ButtonFace;
+    --color-interactive-hover: Highlight;
+    --color-interactive-subtle: Canvas;
+
+    --color-accent: CanvasText;
+    --color-accent-subtle: Canvas;
+
+    --color-default: ButtonBorder;
+    --color-subtle: ButtonBorder;
+    --color-strong: CanvasText;
+    --color-focus: Highlight;
+
+    --color-offset: Canvas;
+  }
+}
+
+/* ============================================================================
+   GLOBAL STYLES
+   ============================================================================ */
+body {
+  font-family: var(--font-sans);
+  @apply bg-surface text-primary;
+  @apply min-h-screen;
+}
+
+/* Focus styles */
+*:focus-visible {
+  @apply outline-none ring-2 ring-focus ring-offset-2 ring-offset-offset;
+}
+
+/* Link styles - only apply to text links, not styled button/nav links */
+a:not(.no-underline) {
+  @apply text-link hover:underline;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  @apply w-2 h-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-sunken;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-secondary;
+}
