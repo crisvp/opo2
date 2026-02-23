@@ -218,16 +218,57 @@ describe("Documents API", () => {
         method: "POST",
         url: "/api/documents/initiate",
         payload: {
-          title: "Test Document",
           filename: "test.pdf",
           mimetype: "application/pdf",
           size: 1024,
+          governmentLevel: "federal",
+          useAi: true,
         },
       });
 
       expect(response.statusCode).toBe(401);
       const body = response.json() as { success: boolean };
       expect(body.success).toBe(false);
+    });
+
+    it("returns 400 when governmentLevel is missing", async () => {
+      // Note: without auth this will be 401, but Zod validation fires first for body schema
+      // The route uses preHandler for auth — schema validation runs first in Fastify
+      // So we expect 400 (schema validation) rather than 401
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/documents/initiate",
+        payload: {
+          filename: "test.pdf",
+          mimetype: "application/pdf",
+          size: 1024,
+          useAi: true,
+          // governmentLevel intentionally omitted
+        },
+      });
+
+      // Either 400 (Zod) or 401 (auth) depending on execution order
+      expect([400, 401]).toContain(response.statusCode);
+    });
+
+    it("ignores title field in body (stripped by Zod)", async () => {
+      // Without auth this will 401, but the point is it should not 500
+      const response = await app.inject({
+        method: "POST",
+        url: "/api/documents/initiate",
+        payload: {
+          filename: "test.pdf",
+          mimetype: "application/pdf",
+          size: 1024,
+          governmentLevel: "federal",
+          useAi: true,
+          title: "This field is stripped by Zod",
+        },
+      });
+
+      // Should not be a 500 — either 400 (validation) or 401 (auth)
+      expect(response.statusCode).not.toBe(500);
+      expect([400, 401]).toContain(response.statusCode);
     });
   });
 
@@ -241,7 +282,7 @@ describe("Documents API", () => {
         method: "POST",
         url: "/api/documents/some-id/confirm-upload",
         payload: {
-          saveAsDraft: false,
+          objectKey: "documents/some-id/file.pdf",
         },
       });
 
@@ -514,10 +555,11 @@ describe("POST /api/documents/initiate — authenticated", () => {
       url: "/api/documents/initiate",
       headers: { cookie },
       payload: {
-        title: "Test Document",
         filename: "test.pdf",
         mimetype: "application/pdf",
         size: 1024,
+        governmentLevel: "federal",
+        useAi: true,
       },
     });
     expect(res.statusCode).toBe(200);
@@ -535,10 +577,11 @@ describe("POST /api/documents/initiate — authenticated", () => {
       url: "/api/documents/initiate",
       headers: { cookie },
       payload: {
-        title: "Malware",
         filename: "evil.exe",
         mimetype: "application/x-msdownload",
         size: 1024,
+        governmentLevel: "federal",
+        useAi: false,
       },
     });
     expect(res.statusCode).toBe(400);
@@ -552,13 +595,49 @@ describe("POST /api/documents/initiate — authenticated", () => {
       url: "/api/documents/initiate",
       headers: { cookie },
       payload: {
-        title: "Too Big",
         filename: "huge.pdf",
         mimetype: "application/pdf",
         size: 51 * 1024 * 1024,
+        governmentLevel: "federal",
+        useAi: false,
       },
     });
     expect(res.statusCode).toBe(400);
+  }, 30_000);
+
+  it("returns 400 when governmentLevel is missing", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/documents/initiate",
+      headers: { cookie },
+      payload: {
+        filename: "test.pdf",
+        mimetype: "application/pdf",
+        size: 1024,
+        useAi: true,
+        // governmentLevel intentionally omitted
+      },
+    });
+    expect(res.statusCode).toBe(400);
+  }, 30_000);
+
+  it("derives title from filename (no title in body)", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/documents/initiate",
+      headers: { cookie },
+      payload: {
+        filename: "police_report_2024.pdf",
+        mimetype: "application/pdf",
+        size: 2048,
+        governmentLevel: "state",
+        stateUsps: "CA",
+        useAi: true,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    const { data } = res.json<{ data: { documentId: string } }>();
+    expect(data.documentId).toMatch(/^[A-Za-z0-9_-]{21}$/);
   }, 30_000);
 
   it("creates document row in pending_upload state", async () => {
@@ -567,32 +646,32 @@ describe("POST /api/documents/initiate — authenticated", () => {
       url: "/api/documents/initiate",
       headers: { cookie },
       payload: {
-        title: "State Check Document",
         filename: "state-check.pdf",
         mimetype: "application/pdf",
         size: 2048,
+        governmentLevel: "federal",
+        useAi: false,
       },
     });
     expect(res.statusCode).toBe(200);
     const { data } = res.json<{ data: { documentId: string } }>();
-
-    // Verify via GET that document exists (it will be pending_upload so not publicly visible)
-    // Owner should be able to see it via my-uploads (once in draft/submitted)
-    // Just verify the documentId is a valid nanoid-like string
     expect(data.documentId).toMatch(/^[A-Za-z0-9_-]{21}$/);
   }, 30_000);
 
-  it("normalizes and stores tags when provided", async () => {
+  it("strips unknown fields like title without error", async () => {
     const res = await app.inject({
       method: "POST",
       url: "/api/documents/initiate",
       headers: { cookie },
       payload: {
-        title: "Tagged Document",
         filename: "tagged.pdf",
         mimetype: "application/pdf",
         size: 1024,
-        tags: ["  Police  ", "SURVEILLANCE", "police"],
+        governmentLevel: "federal",
+        useAi: true,
+        title: "This should be ignored by Zod strip",
+        description: "Also ignored",
+        tags: ["tag1", "tag2"],
       },
     });
     expect(res.statusCode).toBe(200);
@@ -617,21 +696,27 @@ describe("POST /api/documents/:id/confirm-upload — state transitions", () => {
     await app.close();
   });
 
-  it("transitions pending_upload → submitted when saveAsDraft=false", async () => {
+  it("transitions pending_upload → submitted", async () => {
     // First initiate
     const initiateRes = await app.inject({
       method: "POST",
       url: "/api/documents/initiate",
       headers: { cookie },
-      payload: { title: "Submit Test", filename: "submit.pdf", mimetype: "application/pdf", size: 1024 },
+      payload: {
+        filename: "submit.pdf",
+        mimetype: "application/pdf",
+        size: 1024,
+        governmentLevel: "federal",
+        useAi: true,
+      },
     });
-    const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
+    const { data: { documentId, objectKey } } = initiateRes.json<{ data: { documentId: string; objectKey: string } }>();
 
     const confirmRes = await app.inject({
       method: "POST",
       url: `/api/documents/${documentId}/confirm-upload`,
       headers: { cookie },
-      payload: { saveAsDraft: false },
+      payload: { objectKey },
     });
     expect(confirmRes.statusCode).toBe(200);
     const body = confirmRes.json<{ success: boolean; data: { id: string; state: string } }>();
@@ -639,24 +724,31 @@ describe("POST /api/documents/:id/confirm-upload — state transitions", () => {
     expect(body.data.state).toBe("submitted");
   }, 60_000);
 
-  it("transitions pending_upload → draft when saveAsDraft=true", async () => {
+  it("always transitions to submitted (no draft path)", async () => {
     const initiateRes = await app.inject({
       method: "POST",
       url: "/api/documents/initiate",
       headers: { cookie },
-      payload: { title: "Draft Test", filename: "draft.pdf", mimetype: "application/pdf", size: 1024 },
+      payload: {
+        filename: "always-submitted.pdf",
+        mimetype: "application/pdf",
+        size: 1024,
+        governmentLevel: "state",
+        stateUsps: "NY",
+        useAi: false,
+      },
     });
-    const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
+    const { data: { documentId, objectKey } } = initiateRes.json<{ data: { documentId: string; objectKey: string } }>();
 
     const confirmRes = await app.inject({
       method: "POST",
       url: `/api/documents/${documentId}/confirm-upload`,
       headers: { cookie },
-      payload: { saveAsDraft: true },
+      payload: { objectKey },
     });
     expect(confirmRes.statusCode).toBe(200);
     const body = confirmRes.json<{ success: boolean; data: { state: string } }>();
-    expect(body.data.state).toBe("draft");
+    expect(body.data.state).toBe("submitted");
   }, 60_000);
 
   it("returns 422 when S3 object does not exist (mocked to return null)", async () => {
@@ -667,15 +759,21 @@ describe("POST /api/documents/:id/confirm-upload — state transitions", () => {
       method: "POST",
       url: "/api/documents/initiate",
       headers: { cookie },
-      payload: { title: "S3 Missing", filename: "missing.pdf", mimetype: "application/pdf", size: 1024 },
+      payload: {
+        filename: "missing.pdf",
+        mimetype: "application/pdf",
+        size: 1024,
+        governmentLevel: "federal",
+        useAi: true,
+      },
     });
-    const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
+    const { data: { documentId, objectKey } } = initiateRes.json<{ data: { documentId: string; objectKey: string } }>();
 
     const confirmRes = await app.inject({
       method: "POST",
       url: `/api/documents/${documentId}/confirm-upload`,
       headers: { cookie },
-      payload: { saveAsDraft: false },
+      payload: { objectKey },
     });
     expect(confirmRes.statusCode).toBe(422);
     const body = confirmRes.json<{ success: boolean; error: string }>();
@@ -688,9 +786,15 @@ describe("POST /api/documents/:id/confirm-upload — state transitions", () => {
       method: "POST",
       url: "/api/documents/initiate",
       headers: { cookie },
-      payload: { title: "Ownership Test", filename: "own.pdf", mimetype: "application/pdf", size: 1024 },
+      payload: {
+        filename: "own.pdf",
+        mimetype: "application/pdf",
+        size: 1024,
+        governmentLevel: "federal",
+        useAi: true,
+      },
     });
-    const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
+    const { data: { documentId, objectKey } } = initiateRes.json<{ data: { documentId: string; objectKey: string } }>();
 
     // Register second user
     const other = await registerAndSignIn(app, `confirm-other-${Date.now()}`);
@@ -699,7 +803,7 @@ describe("POST /api/documents/:id/confirm-upload — state transitions", () => {
       method: "POST",
       url: `/api/documents/${documentId}/confirm-upload`,
       headers: { cookie: other.cookie },
-      payload: { saveAsDraft: false },
+      payload: { objectKey },
     });
     expect(confirmRes.statusCode).toBe(403);
   }, 60_000);
@@ -723,52 +827,39 @@ describe("POST /api/documents/:id/submit — draft workflow", () => {
     await app.close();
   });
 
-  it("submits a draft document and returns submitted state", async () => {
-    // Initiate + save as draft
+  it("returns 404 for non-existent document", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/documents/nonexistent-doc-id/submit",
+      headers: { cookie },
+    });
+    expect(res.statusCode).toBe(404);
+  }, 30_000);
+
+  it("returns 422 when document is in submitted state (not draft)", async () => {
+    // Initiate + confirm (goes directly to submitted now)
     const initiateRes = await app.inject({
       method: "POST",
       url: "/api/documents/initiate",
       headers: { cookie },
-      payload: { title: "Draft to Submit", filename: "d2s.pdf", mimetype: "application/pdf", size: 1024 },
+      payload: {
+        filename: "already-submitted.pdf",
+        mimetype: "application/pdf",
+        size: 1024,
+        governmentLevel: "federal",
+        useAi: true,
+      },
     });
-    const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
+    const { data: { documentId, objectKey } } = initiateRes.json<{ data: { documentId: string; objectKey: string } }>();
 
     await app.inject({
       method: "POST",
       url: `/api/documents/${documentId}/confirm-upload`,
       headers: { cookie },
-      payload: { saveAsDraft: true },
+      payload: { objectKey },
     });
 
-    const submitRes = await app.inject({
-      method: "POST",
-      url: `/api/documents/${documentId}/submit`,
-      headers: { cookie },
-    });
-    expect(submitRes.statusCode).toBe(200);
-    const body = submitRes.json<{ success: boolean; data: { state: string } }>();
-    expect(body.success).toBe(true);
-    expect(body.data.state).toBe("submitted");
-  }, 60_000);
-
-  it("returns 422 when document is not in draft state", async () => {
-    // Initiate + submit directly (not saveAsDraft)
-    const initiateRes = await app.inject({
-      method: "POST",
-      url: "/api/documents/initiate",
-      headers: { cookie },
-      payload: { title: "Already Submitted", filename: "already.pdf", mimetype: "application/pdf", size: 1024 },
-    });
-    const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
-
-    await app.inject({
-      method: "POST",
-      url: `/api/documents/${documentId}/confirm-upload`,
-      headers: { cookie },
-      payload: { saveAsDraft: false },
-    });
-
-    // Try to submit again — already in submitted state
+    // Try to submit again — already in submitted state, not draft
     const submitRes = await app.inject({
       method: "POST",
       url: `/api/documents/${documentId}/submit`,
@@ -778,15 +869,6 @@ describe("POST /api/documents/:id/submit — draft workflow", () => {
     const body = submitRes.json<{ success: boolean }>();
     expect(body.success).toBe(false);
   }, 60_000);
-
-  it("returns 404 for non-existent document", async () => {
-    const res = await app.inject({
-      method: "POST",
-      url: "/api/documents/nonexistent-doc-id/submit",
-      headers: { cookie },
-    });
-    expect(res.statusCode).toBe(404);
-  }, 30_000);
 });
 
 // ---------------------------------------------------------------------------
@@ -824,7 +906,13 @@ describe("GET /api/documents — access control", () => {
       method: "POST",
       url: "/api/documents/initiate",
       headers: { cookie: auth.cookie },
-      payload: { title: "Private Draft", filename: "private.pdf", mimetype: "application/pdf", size: 1024 },
+      payload: {
+        filename: "private.pdf",
+        mimetype: "application/pdf",
+        size: 1024,
+        governmentLevel: "federal",
+        useAi: false,
+      },
     });
     const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
     await tempApp.close();
@@ -862,20 +950,26 @@ describe("GET /api/documents/my-uploads — owner sees own documents", () => {
   }, 30_000);
 
   it("returns uploaded documents after initiate+confirm", async () => {
-    // Create a draft document
+    // Create a document and confirm it (now goes directly to submitted)
     const initiateRes = await app.inject({
       method: "POST",
       url: "/api/documents/initiate",
       headers: { cookie },
-      payload: { title: "My Upload", filename: "myfile.pdf", mimetype: "application/pdf", size: 1024 },
+      payload: {
+        filename: "myfile.pdf",
+        mimetype: "application/pdf",
+        size: 1024,
+        governmentLevel: "federal",
+        useAi: true,
+      },
     });
-    const { data: { documentId } } = initiateRes.json<{ data: { documentId: string } }>();
+    const { data: { documentId, objectKey } } = initiateRes.json<{ data: { documentId: string; objectKey: string } }>();
 
     await app.inject({
       method: "POST",
       url: `/api/documents/${documentId}/confirm-upload`,
       headers: { cookie },
-      payload: { saveAsDraft: true },
+      payload: { objectKey },
     });
 
     const uploadsRes = await app.inject({

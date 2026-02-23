@@ -1,12 +1,13 @@
 import type { FastifyPluginAsync } from "fastify";
-import { z } from "zod";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
+import { z } from "zod";
 import { nanoid } from "nanoid";
 import { makeWorkerUtils } from "graphile-worker";
 
 import { env } from "../../config/env.js";
 import { createPresignedUploadUrl, headObject } from "../../services/storage.js";
 import { checkTierLimit, recordUsage } from "../../services/usage.js";
+import { initiateUploadSchema, confirmUploadSchema } from "@opo/shared";
 
 const ALLOWED_MIMETYPES = new Set([
   "application/pdf",
@@ -22,31 +23,19 @@ const ALLOWED_MIMETYPES = new Set([
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]);
 
-const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
-
-const initiateSchema = z.object({
-  title: z.string().min(1).max(500),
-  filename: z.string().min(1),
-  mimetype: z.string().min(1),
-  size: z.number().int().positive().max(MAX_SIZE),
-  description: z.string().max(5000).optional(),
-  documentDate: z.string().optional(),
-  governmentLevel: z.enum(["federal", "state", "county", "place", "tribal"]).optional(),
-  stateUsps: z.string().length(2).optional(),
-  placeGeoid: z.string().optional(),
-  tribeId: z.string().optional(),
-  category: z.string().optional(),
-  tags: z.array(z.string().min(1).max(100)).optional(),
-  saveAsDraft: z.boolean().optional().default(false),
-});
-
-const confirmUploadSchema = z.object({
-  saveAsDraft: z.boolean().optional().default(false),
-});
-
 const idParamsSchema = z.object({
   id: z.string(),
 });
+
+function titleFromFilename(filename: string): string {
+  return (
+    filename
+      .replace(/\.[^.]+$/, "") // strip extension
+      .replace(/[_-]+/g, " ") // underscores/hyphens → spaces
+      .replace(/\b\w/g, (c) => c.toUpperCase()) // capitalize words
+      .trim() || "Untitled Document"
+  );
+}
 
 async function enqueueVirusScan(documentId: string, s3Key: string, mimetype: string): Promise<void> {
   const workerUtils = await makeWorkerUtils({ connectionString: env.DATABASE_URL });
@@ -59,7 +48,7 @@ const plugin: FastifyPluginAsync = async (fastify) => {
   fastify.withTypeProvider<ZodTypeProvider>().post(
     "/initiate",
     {
-      schema: { body: initiateSchema },
+      schema: { body: initiateUploadSchema },
       preHandler: [fastify.requireAuth],
     },
     async (request, reply) => {
@@ -94,46 +83,27 @@ const plugin: FastifyPluginAsync = async (fastify) => {
         body.mimetype,
       );
 
-      // Insert document row
+      // Insert document row — title auto-derived from filename
       await fastify.db
         .insertInto("documents")
         .values({
           id: documentId,
-          title: body.title,
-          description: body.description ?? null,
+          title: titleFromFilename(body.filename),
           filename: body.filename,
           filepath: objectKey,
           mimetype: body.mimetype,
           size: body.size,
           uploader_id: user.id,
-          government_level: body.governmentLevel ?? null,
+          government_level: body.governmentLevel,
           state_usps: body.stateUsps ?? null,
           place_geoid: body.placeGeoid ?? null,
           tribe_id: body.tribeId ?? null,
-          document_date: body.documentDate ?? null,
-          category: body.category ?? null,
           state: "pending_upload",
-          use_ai_extraction: true,
+          use_ai_extraction: body.useAi,
           created_at: new Date(),
           updated_at: new Date(),
         })
         .execute();
-
-      // Insert tags if provided
-      if (body.tags && body.tags.length > 0) {
-        const normalizedTags = [...new Set(body.tags.map((t) => t.trim().toLowerCase()))];
-        await fastify.db
-          .insertInto("document_tags")
-          .values(
-            normalizedTags.map((tag) => ({
-              id: nanoid(),
-              document_id: documentId,
-              tag,
-              created_at: new Date(),
-            })),
-          )
-          .execute();
-      }
 
       return {
         success: true,
@@ -148,6 +118,7 @@ const plugin: FastifyPluginAsync = async (fastify) => {
   );
 
   // POST /:id/confirm-upload — Auth required
+  // Accepts objectKey (for future S3 key verification); always transitions pending_upload → submitted
   fastify.withTypeProvider<ZodTypeProvider>().post(
     "/:id/confirm-upload",
     {
@@ -159,7 +130,6 @@ const plugin: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const { id } = request.params;
-      const body = request.body;
       const user = request.user!;
 
       // Fetch document
@@ -195,27 +165,21 @@ const plugin: FastifyPluginAsync = async (fastify) => {
       // Record usage
       await recordUsage(fastify.db, user.id, "uploads");
 
-      // Determine new state
-      const newState = body.saveAsDraft ? "draft" : "submitted";
-
-      // Update document state
+      // Always transition pending_upload → submitted and enqueue the pipeline
       await fastify.db
         .updateTable("documents")
         .set({
-          state: newState,
+          state: "submitted",
           updated_at: new Date(),
         })
         .where("id", "=", id)
         .execute();
 
-      // If submitted, enqueue virus scan job
-      if (newState === "submitted") {
-        await enqueueVirusScan(id, doc.filepath as string, doc.mimetype as string);
-      }
+      await enqueueVirusScan(id, doc.filepath as string, doc.mimetype as string);
 
       return {
         success: true,
-        data: { id, state: newState },
+        data: { id, state: "submitted" },
       };
     },
   );
