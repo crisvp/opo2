@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watchEffect } from "vue";
 import { useRoute } from "vue-router";
-import { useLocationOverview } from "../../api/queries/locations";
+import { useLocationOverview, useTribeDetail } from "../../api/queries/locations";
+import { useBreadcrumb } from "../../composables/useBreadcrumb";
 
 const route = useRoute();
 const tribeId = computed(() => route.params.tribeId as string);
@@ -11,6 +12,16 @@ const stateRef = ref<string | null>(null);
 const placeRef = ref<string | null>(null);
 
 const { data: overview, isLoading, isError } = useLocationOverview(level, stateRef, placeRef);
+const { data: tribe } = useTribeDetail(tribeId);
+
+const { set: setBreadcrumbs } = useBreadcrumb();
+watchEffect(() => {
+  setBreadcrumbs([
+    { label: "Locations", to: "/locations" },
+    { label: "Tribal Nations", to: "/locations/tribes" },
+    { label: tribe.value?.name ?? tribeId.value },
+  ]);
+});
 </script>
 
 <template>

@@ -1,12 +1,22 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watchEffect } from "vue";
 import { useRoute } from "vue-router";
 import { usePlaceList, useStateDetail } from "../../api/queries/locations";
+import { useBreadcrumb } from "../../composables/useBreadcrumb";
 
 const route = useRoute();
 const usps = computed(() => route.params.usps as string);
 const { data: state } = useStateDetail(usps);
 const { data: places, isLoading, isError } = usePlaceList(usps);
+
+const { set: setBreadcrumbs } = useBreadcrumb();
+watchEffect(() => {
+  setBreadcrumbs([
+    { label: "Locations", to: "/locations" },
+    { label: "States", to: "/locations/states" },
+    { label: state.value?.name ?? usps.value },
+  ]);
+});
 
 const filter = ref("");
 

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { RouterLink, useRoute } from "vue-router";
+import { useBreadcrumb } from "../../composables/useBreadcrumb";
 
 const route = useRoute();
+const { breadcrumbs } = useBreadcrumb();
 
 const routeTitles: Record<string, string> = {
   home: "Home",
@@ -21,7 +23,8 @@ const routeTitles: Record<string, string> = {
   "security-settings": "Security",
   moderation: "Moderation Queue",
   "documentcloud-search": "DocumentCloud",
-  locations: "Locations",
+  "locations-states": "Locations",
+  "locations-tribes": "Locations",
   "state-browse": "State",
   "location-overview": "Location",
   "tribal-overview": "Tribal Nation",
@@ -38,12 +41,15 @@ const routeTitles: Record<string, string> = {
   "not-found": "Not Found",
 };
 
-const currentPageTitle = computed(() => {
-  const routeName = route.name as string;
-  return (route.meta?.title as string) || routeTitles[routeName] || "Page";
-});
-
 const isHome = computed(() => route.path === "/");
+
+// Use dynamic breadcrumbs if a view has set them, otherwise fall back to single-segment
+const items = computed(() => {
+  if (breadcrumbs.value.length > 0) return breadcrumbs.value;
+  const routeName = route.name as string;
+  const title = (route.meta?.title as string) || routeTitles[routeName] || "Page";
+  return [{ label: title }];
+});
 </script>
 
 <template>
@@ -55,8 +61,17 @@ const isHome = computed(() => route.path === "/");
       <RouterLink to="/" class="text-muted hover:text-primary no-underline">
         Home
       </RouterLink>
-      <span class="text-muted">/</span>
-      <span class="text-primary font-medium">{{ currentPageTitle }}</span>
+      <template v-for="(item, i) in items" :key="i">
+        <span class="text-muted">/</span>
+        <RouterLink
+          v-if="item.to"
+          :to="item.to"
+          class="text-muted hover:text-primary no-underline"
+        >
+          {{ item.label }}
+        </RouterLink>
+        <span v-else class="text-primary font-medium">{{ item.label }}</span>
+      </template>
     </nav>
   </div>
 </template>

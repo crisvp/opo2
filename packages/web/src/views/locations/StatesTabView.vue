@@ -4,6 +4,10 @@ import Panel from "primevue/panel";
 import { useStateList } from "../../api/queries/locations";
 import UsaStateMap from "../../components/locations/UsaStateMap.vue";
 import { useRouter } from "vue-router";
+import { useBreadcrumb } from "../../composables/useBreadcrumb";
+
+const { set: setBreadcrumbs } = useBreadcrumb();
+setBreadcrumbs([{ label: "Locations" }]);
 
 const { data: states, isLoading, isError } = useStateList();
 const router = useRouter();

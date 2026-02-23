@@ -1,18 +1,30 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watchEffect } from "vue";
 import { useRoute } from "vue-router";
-import { useLocationOverview } from "../../api/queries/locations";
+import { useLocationOverview, usePlaceDetail } from "../../api/queries/locations";
 import PolicyStatusCard from "../../components/locations/PolicyStatusCard.vue";
+import { useBreadcrumb } from "../../composables/useBreadcrumb";
 
 const route = useRoute();
 const level = computed(() => (route.params.level as string) ?? "place");
 const state = computed(() => (route.params.state as string) ?? null);
 const place = computed(() => (route.params.place as string) ?? null);
+const geoid = computed(() => route.params.geoid as string);
 
 const stateRef = ref<string | null>(state.value);
 const placeRef = ref<string | null>(place.value);
 
 const { data: overview, isLoading, isError } = useLocationOverview(level, stateRef, placeRef);
+const { data: placeDetail } = usePlaceDetail(geoid);
+
+const { set: setBreadcrumbs } = useBreadcrumb();
+watchEffect(() => {
+  setBreadcrumbs([
+    { label: "Locations", to: "/locations" },
+    { label: "States", to: "/locations/states" },
+    { label: placeDetail.value?.name ?? geoid.value },
+  ]);
+});
 </script>
 
 <template>
