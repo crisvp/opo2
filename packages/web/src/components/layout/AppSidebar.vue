@@ -8,11 +8,13 @@ import { useAuthStore } from "../../stores/auth";
 import { useSidebarState } from "../../composables/useSidebarState";
 import { ROLES, hasRole } from "@opo/shared";
 import AppLogo from "./AppLogo.vue";
+import { useUserReviewCount } from "../../composables/useUserReviewCount";
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 const { isOpen, isMobileOpen, toggle, closeMobile } = useSidebarState();
+const { count: userReviewCount } = useUserReviewCount();
 
 // Dark mode: simple toggle using localStorage + class on documentElement
 const isDark = ref(document.documentElement.classList.contains("dark"));
@@ -74,7 +76,7 @@ const navSections = computed<NavSection[]>(() => {
     sections.push({
       label: "My Account",
       items: [
-        { label: "My Uploads", icon: "pi-folder", to: "/my-uploads" },
+        { label: "My Uploads", icon: "pi-folder", to: "/my-uploads", badge: userReviewCount.value > 0 ? String(userReviewCount.value) : null },
         { label: "Profile", icon: "pi-user", to: "/profile" },
         { label: "Security", icon: "pi-shield", to: "/profile/security" },
       ],
