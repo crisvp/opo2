@@ -40,6 +40,7 @@ export interface State {
   usps: string;
   name: string;
   isTerritory: boolean;
+  documentCount: number;
 }
 
 export interface Place {

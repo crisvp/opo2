@@ -45,6 +45,19 @@ describe("Locations API", () => {
         expect(typeof first.isTerritory).toBe("boolean");
       }
     });
+
+    it("items include documentCount field", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/locations/states",
+      });
+
+      const body = response.json() as { success: boolean; data: Array<Record<string, unknown>> };
+      if (body.data.length > 0) {
+        const first = body.data[0];
+        expect(typeof first.documentCount).toBe("number");
+      }
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -91,6 +104,18 @@ describe("Locations API", () => {
         expect(typeof first.lat).toBe("number");
         expect(typeof first.lon).toBe("number");
       }
+    });
+
+    it("returns places for Connecticut", async () => {
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/locations/states/CT/places",
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = response.json() as { success: boolean; data: unknown[] };
+      expect(body.success).toBe(true);
+      expect(body.data.length).toBeGreaterThan(0);
     });
   });
 

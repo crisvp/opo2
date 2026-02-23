@@ -8,8 +8,26 @@ const plugin: FastifyPluginAsync = async (fastify) => {
     async (_request, _reply) => {
       const rows = await fastify.db
         .selectFrom("states")
-        .select(["usps", "name", "is_territory"])
-        .orderBy("name", "asc")
+        .leftJoin(
+          fastify.db
+            .selectFrom("documents")
+            .select([
+              "state_usps",
+              fastify.db.fn.countAll<number>().as("doc_count"),
+            ])
+            .where("state", "=", "approved")
+            .groupBy("state_usps")
+            .as("dc"),
+          "dc.state_usps",
+          "states.usps",
+        )
+        .select([
+          "states.usps",
+          "states.name",
+          "states.is_territory",
+          "dc.doc_count",
+        ])
+        .orderBy("states.name", "asc")
         .execute();
 
       return {
@@ -18,6 +36,7 @@ const plugin: FastifyPluginAsync = async (fastify) => {
           usps: r.usps as string,
           name: r.name as string,
           isTerritory: r.is_territory as boolean,
+          documentCount: Number(r.doc_count ?? 0),
         })),
       };
     },
