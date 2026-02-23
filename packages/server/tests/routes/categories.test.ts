@@ -81,29 +81,29 @@ describe("Categories API — auth guards", () => {
     expect([200, 404]).toContain(res.statusCode);
   });
 
-  it("POST /api/categories returns 403 without auth", async () => {
+  it("POST /api/categories returns 401 without auth", async () => {
     const res = await app.inject({ method: "POST", url: "/api/categories", payload: { id: "test", name: "Test" } });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
-  it("PUT /api/categories/:id returns 403 without auth", async () => {
+  it("PUT /api/categories/:id returns 401 without auth", async () => {
     const res = await app.inject({ method: "PUT", url: "/api/categories/some-id", payload: { name: "Updated" } });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
-  it("DELETE /api/categories/:id returns 403 without auth", async () => {
+  it("DELETE /api/categories/:id returns 401 without auth", async () => {
     const res = await app.inject({ method: "DELETE", url: "/api/categories/some-id" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
-  it("POST /api/categories/:id/fields returns 403 without auth", async () => {
+  it("POST /api/categories/:id/fields returns 401 without auth", async () => {
     const res = await app.inject({ method: "POST", url: "/api/categories/some-id/fields", payload: { fieldKey: "test", displayName: "Test", valueType: "text" } });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
-  it("PUT /api/categories/:id/rules returns 403 without auth", async () => {
+  it("PUT /api/categories/:id/rules returns 401 without auth", async () => {
     const res = await app.inject({ method: "PUT", url: "/api/categories/some-id/rules", payload: {} });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
   it("GET /api/policy-types returns array", async () => {
@@ -111,9 +111,9 @@ describe("Categories API — auth guards", () => {
     expect(res.statusCode).toBe(200);
   });
 
-  it("POST /api/policy-types returns 403 without auth", async () => {
+  it("POST /api/policy-types returns 401 without auth", async () => {
     const res = await app.inject({ method: "POST", url: "/api/policy-types", payload: { name: "Test Policy" } });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 });
 

@@ -65,13 +65,13 @@ describe("GET /api/documentcloud/search", () => {
 // ---------------------------------------------------------------------------
 
 describe("POST /api/documentcloud/import", () => {
-  it("returns 403 for unauthenticated (non-moderator) requests", async () => {
+  it("returns 401 for unauthenticated requests", async () => {
     const res = await app.inject({
       method: "POST",
       url: "/api/documentcloud/import",
       payload: { documentCloudId: 12345 },
     });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
     const body = res.json() as { success: boolean };
     expect(body.success).toBe(false);
   });
@@ -91,13 +91,13 @@ describe("POST /api/documentcloud/import", () => {
 // ---------------------------------------------------------------------------
 
 describe("POST /api/documentcloud/import/batch", () => {
-  it("returns 403 for unauthenticated (non-moderator) requests", async () => {
+  it("returns 401 for unauthenticated requests", async () => {
     const res = await app.inject({
       method: "POST",
       url: "/api/documentcloud/import/batch",
       payload: { documentCloudIds: [12345, 67890] },
     });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
     const body = res.json() as { success: boolean };
     expect(body.success).toBe(false);
   });

@@ -117,46 +117,46 @@ describe("Moderation API", () => {
   });
 
   describe("GET /api/moderation/queue", () => {
-    it("returns 403 without authentication", async () => {
+    it("returns 401 without authentication", async () => {
       const response = await app.inject({
         method: "GET",
         url: "/api/moderation/queue",
       });
-      expect(response.statusCode).toBe(403);
+      expect(response.statusCode).toBe(401);
       const body = response.json() as { success: boolean };
       expect(body.success).toBe(false);
     });
 
-    it("returns 403 with plain user role (not moderator)", async () => {
+    it("returns 401 for unauthenticated request (no session cookie)", async () => {
       const response = await app.inject({
         method: "GET",
         url: "/api/moderation/queue",
         headers: {},
       });
-      expect(response.statusCode).toBe(403);
+      expect(response.statusCode).toBe(401);
     });
   });
 
   describe("POST /api/documents/:id/approve", () => {
-    it("returns 403 without authentication", async () => {
+    it("returns 401 without authentication", async () => {
       const response = await app.inject({
         method: "POST",
         url: "/api/documents/some-id/approve",
       });
-      expect(response.statusCode).toBe(403);
+      expect(response.statusCode).toBe(401);
       const body = response.json() as { success: boolean };
       expect(body.success).toBe(false);
     });
   });
 
   describe("POST /api/documents/:id/reject", () => {
-    it("returns 403 without authentication", async () => {
+    it("returns 401 without authentication", async () => {
       const response = await app.inject({
         method: "POST",
         url: "/api/documents/some-id/reject",
         payload: { reason: "Insufficient information" },
       });
-      expect(response.statusCode).toBe(403);
+      expect(response.statusCode).toBe(401);
       const body = response.json() as { success: boolean };
       expect(body.success).toBe(false);
     });

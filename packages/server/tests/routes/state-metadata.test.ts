@@ -70,19 +70,19 @@ describe("State Metadata API — auth guards", () => {
     expect(res.statusCode).toBe(200);
   });
 
-  it("POST /api/state-metadata returns 403 without auth", async () => {
+  it("POST /api/state-metadata returns 401 without auth", async () => {
     const res = await app.inject({ method: "POST", url: "/api/state-metadata", payload: { stateUsps: "CA", key: "test", value: "val" } });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
-  it("PUT /api/state-metadata/:id returns 403 without auth", async () => {
+  it("PUT /api/state-metadata/:id returns 401 without auth", async () => {
     const res = await app.inject({ method: "PUT", url: "/api/state-metadata/some-id", payload: { value: "updated" } });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
-  it("DELETE /api/state-metadata/:id returns 403 without auth", async () => {
+  it("DELETE /api/state-metadata/:id returns 401 without auth", async () => {
     const res = await app.inject({ method: "DELETE", url: "/api/state-metadata/some-id" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 });
 

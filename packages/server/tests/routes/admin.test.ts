@@ -94,9 +94,9 @@ afterAll(async () => {
 });
 
 describe("GET /api/admin/stats", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "GET", url: "/api/admin/stats" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
     const body = res.json() as { success: boolean };
     expect(body.success).toBe(false);
   });
@@ -108,25 +108,25 @@ describe("GET /api/admin/stats", () => {
 });
 
 describe("GET /api/admin/users", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "GET", url: "/api/admin/users" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
     const body = res.json() as { success: boolean };
     expect(body.success).toBe(false);
   });
 });
 
 describe("GET /api/admin/users/:id", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "GET", url: "/api/admin/users/some-id" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 });
 
 describe("PUT /api/admin/users/:id/role", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "PUT", url: "/api/admin/users/some-id/role", payload: { role: "user" } });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
   it("returns 400 for invalid role value (validation before auth)", async () => {
@@ -136,23 +136,23 @@ describe("PUT /api/admin/users/:id/role", () => {
 });
 
 describe("PUT /api/admin/users/:id/tier", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "PUT", url: "/api/admin/users/some-id/tier", payload: { tierId: 1 } });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 });
 
 describe("DELETE /api/admin/users/:id", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "DELETE", url: "/api/admin/users/some-id" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 });
 
 describe("GET /api/admin/failed-processing", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "GET", url: "/api/admin/failed-processing" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
   it("does not return 501", async () => {
     const res = await app.inject({ method: "GET", url: "/api/admin/failed-processing" });
@@ -161,23 +161,23 @@ describe("GET /api/admin/failed-processing", () => {
 });
 
 describe("POST /api/admin/failed-processing/:id/retry", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "POST", url: "/api/admin/failed-processing/some-id/retry" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 });
 
 describe("DELETE /api/admin/failed-processing/:id", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "DELETE", url: "/api/admin/failed-processing/some-id" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 });
 
 describe("GET /api/admin/stuck-processing", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "GET", url: "/api/admin/stuck-processing" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
   it("does not return 501", async () => {
     const res = await app.inject({ method: "GET", url: "/api/admin/stuck-processing" });
@@ -186,9 +186,9 @@ describe("GET /api/admin/stuck-processing", () => {
 });
 
 describe("GET /api/admin/jobs", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "GET", url: "/api/admin/jobs" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
   it("does not return 501", async () => {
     const res = await app.inject({ method: "GET", url: "/api/admin/jobs" });
@@ -197,37 +197,37 @@ describe("GET /api/admin/jobs", () => {
 });
 
 describe("GET /api/admin/jobs/:id", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "GET", url: "/api/admin/jobs/123" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 });
 
 describe("POST /api/admin/jobs/:id/retry", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "POST", url: "/api/admin/jobs/123/retry" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 });
 
 describe("POST /api/admin/jobs/:id/cancel", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "POST", url: "/api/admin/jobs/123/cancel" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 });
 
 describe("POST /api/admin/jobs/bulk-retry", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "POST", url: "/api/admin/jobs/bulk-retry" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 });
 
 describe("DELETE /api/admin/jobs/completed", () => {
-  it("returns 403 without authentication", async () => {
+  it("returns 401 without authentication", async () => {
     const res = await app.inject({ method: "DELETE", url: "/api/admin/jobs/completed" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 });
 

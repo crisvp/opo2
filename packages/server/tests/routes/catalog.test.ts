@@ -92,29 +92,29 @@ describe("Catalog API — auth guards", () => {
     expect(res.statusCode).toBe(200);
   });
 
-  it("POST /api/catalog/entries returns 403 without auth", async () => {
+  it("POST /api/catalog/entries returns 401 without auth", async () => {
     const res = await app.inject({ method: "POST", url: "/api/catalog/entries", payload: { typeId: "vendor", name: "Test" } });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
-  it("PUT /api/catalog/entries/:id returns 403 without auth", async () => {
+  it("PUT /api/catalog/entries/:id returns 401 without auth", async () => {
     const res = await app.inject({ method: "PUT", url: "/api/catalog/entries/some-id", payload: { name: "Updated" } });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
-  it("DELETE /api/catalog/entries/:id returns 403 without auth", async () => {
+  it("DELETE /api/catalog/entries/:id returns 401 without auth", async () => {
     const res = await app.inject({ method: "DELETE", url: "/api/catalog/entries/some-id" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
-  it("POST /api/catalog/entries/:id/aliases returns 403 without auth", async () => {
+  it("POST /api/catalog/entries/:id/aliases returns 401 without auth", async () => {
     const res = await app.inject({ method: "POST", url: "/api/catalog/entries/some-id/aliases", payload: { alias: "test" } });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
-  it("DELETE /api/catalog/aliases/:id returns 403 without auth", async () => {
+  it("DELETE /api/catalog/aliases/:id returns 401 without auth", async () => {
     const res = await app.inject({ method: "DELETE", url: "/api/catalog/aliases/some-id" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 });
 

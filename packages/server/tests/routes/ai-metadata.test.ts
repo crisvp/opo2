@@ -70,13 +70,13 @@ describe("AI Metadata API", () => {
   // ---------------------------------------------------------------------------
 
   describe("POST /api/documents/:id/admin-rerun-extraction", () => {
-    it("returns 403 without authentication", async () => {
+    it("returns 401 without authentication", async () => {
       const response = await app.inject({
         method: "POST",
         url: "/api/documents/some-id/admin-rerun-extraction",
       });
 
-      expect(response.statusCode).toBe(403);
+      expect(response.statusCode).toBe(401);
       const body = response.json() as { success: boolean };
       expect(body.success).toBe(false);
     });

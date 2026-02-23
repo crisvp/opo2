@@ -4,3 +4,5 @@ packages:
 onlyBuiltDependencies:
   - esbuild
   - vue-demi
+
+storeDir: /Users/hcvp/opo2/.pnpm-store

@@ -79,19 +79,19 @@ describe("Agencies API — auth guards", () => {
     expect(res.statusCode).toBe(404);
   });
 
-  it("POST /api/agencies returns 403 without auth", async () => {
+  it("POST /api/agencies returns 401 without auth", async () => {
     const res = await app.inject({ method: "POST", url: "/api/agencies", payload: { stateUsps: "CA", name: "Test" } });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
-  it("PUT /api/agencies/:id returns 403 without auth", async () => {
+  it("PUT /api/agencies/:id returns 401 without auth", async () => {
     const res = await app.inject({ method: "PUT", url: "/api/agencies/some-id", payload: { name: "Updated" } });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
-  it("DELETE /api/agencies/:id returns 403 without auth", async () => {
+  it("DELETE /api/agencies/:id returns 401 without auth", async () => {
     const res = await app.inject({ method: "DELETE", url: "/api/agencies/some-id" });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(401);
   });
 
   it("GET /api/agencies returns 400 for invalid stateUsps length", async () => {
