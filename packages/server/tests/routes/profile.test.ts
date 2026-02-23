@@ -155,3 +155,42 @@ describe("PUT /api/profile/api-keys/openrouter/settings", () => {
     expect(res.statusCode).toBe(400);
   });
 });
+
+// ---------------------------------------------------------------------------
+// GET /api/profile (consolidated)
+// ---------------------------------------------------------------------------
+
+describe("GET /api/profile", () => {
+  it("returns 401 without authentication", async () => {
+    const res = await app.inject({ method: "GET", url: "/api/profile" });
+    expect(res.statusCode).toBe(401);
+    const body = res.json() as { success: boolean };
+    expect(body.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PUT /api/profile (consolidated)
+// ---------------------------------------------------------------------------
+
+describe("PUT /api/profile", () => {
+  it("returns 401 without authentication", async () => {
+    const res = await app.inject({
+      method: "PUT",
+      url: "/api/profile",
+      payload: { name: "Test User" },
+    });
+    expect(res.statusCode).toBe(401);
+    const body = res.json() as { success: boolean };
+    expect(body.success).toBe(false);
+  });
+
+  it("returns 400 for invalid aiSuggestionsEnabled (not a boolean)", async () => {
+    const res = await app.inject({
+      method: "PUT",
+      url: "/api/profile",
+      payload: { aiSuggestionsEnabled: "not-a-boolean" },
+    });
+    expect(res.statusCode).toBe(400);
+  });
+});
