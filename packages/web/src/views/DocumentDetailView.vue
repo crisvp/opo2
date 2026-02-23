@@ -9,6 +9,7 @@ import DocumentMetadataPanel from "../components/documents/DocumentMetadataPanel
 import DocumentAssociationsPanel from "../components/documents/DocumentAssociationsPanel.vue";
 import { useDocumentDetail, useDocumentReopen, useRetryExtraction } from "../api/queries/documents";
 import { PROCESSING_STATES, REVIEW_STATES } from "@opo/shared";
+import ReviewView from "../components/review/ReviewView.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -89,12 +90,9 @@ function handleRetry() {
         </div>
       </template>
 
-      <!-- Review mode: user_review, draft — placeholder for Task 16 -->
+      <!-- Review mode: user_review, draft -->
       <template v-else-if="viewMode === 'review'">
-        <div class="p-4">
-          <p>Document ready for review.</p>
-          <p class="text-sm text-surface-500">Review UI coming in next task.</p>
-        </div>
+        <ReviewView :document-id="doc.id" />
       </template>
 
       <!-- Rejected mode -->
